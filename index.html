@@ -1,11 +1,86 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>apo</title>
-  </head>
-  <body style="background-color: white; color: black; font-family: monospace;">
+<head>
+  <title>apo</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: white;
+      color: black;
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+    }
+
+    .sidebar {
+      position: absolute;
+      top: 10px;
+      left: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      opacity: 0.5;
+    }
+
+    .container {
+      margin: 60px auto;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    canvas {
+      margin-top: 30px;
+      max-width: 400px;
+    }
+
+    .section {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">apo_v01d</div>
+
+  <div class="container">
     <h1>apo</h1>
     <p>Independent research. Tactical risk. Creative intelligence.</p>
-    <p>Email: leticia@apo.org (ou outro que preferir)</p>
-  </body>
+    <p>Email: leticia@apo.org</p>
+
+    <div class="section">
+      <h3>Daily Performance (Fake placeholder)</h3>
+      <p>📊 Total Balance: $3,720.14</p>
+      <p>📈 Daily Return: +2.4%</p>
+      <p>⚠️ Estimated Risk: Moderate</p>
+    </div>
+
+    <div class="section">
+      <h3>Portfolio Allocation</h3>
+      <canvas id="portfolioChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('portfolioChart');
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['BTC/USD', 'USD/CHF', 'EUR/USD'],
+        datasets: [{
+          label: 'Allocation',
+          data: [50, 30, 20],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }
+    });
+  </script>
+
+</body>
 </html>
