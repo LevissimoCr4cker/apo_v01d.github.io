@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>apo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       background-color: white;
@@ -23,6 +24,7 @@
     .container {
       margin: 60px auto;
       max-width: 600px;
+      padding: 0 20px;
       text-align: center;
     }
 
@@ -58,6 +60,17 @@
       margin-top: 10px;
       font-weight: bold;
     }
+
+    /* 🔁 Responsive: Stack cleanly on smaller screens */
+    @media (max-width: 600px) {
+      .treemap {
+        flex-direction: column;
+      }
+      .block {
+        flex-basis: auto !important;
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -69,10 +82,12 @@
     <p>Independent research. Tactical risk. Creative intelligence.</p>
 
     <div class="section">
-      <h3>Daily Performance</h3>
+      <h3>Performance Overview</h3>
       <p>📊 Total Balance: $6,164.98</p>
       <p>📈 Daily Return: +2.4%</p>
-      <p>⚠️ Estimated Risk: Moderate</p>
+      <p>📅 Monthly Average Return: +111.7%</p>
+      <p>📈 Portfolio Growth (since start): +$4,984.98</p>
+      <p>⚠️ Estimated Risk: High</p>
     </div>
 
     <div class="section">
