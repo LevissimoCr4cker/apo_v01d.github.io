@@ -21,8 +21,25 @@
       opacity: 0.5;
     }
 
+    .counter-container {
+      text-align: center;
+      padding: 20px 20px 0 20px;
+      background: #f9f9f9;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .counter-text {
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    progress {
+      width: 80%;
+      height: 24px;
+    }
+
     .container {
-      margin: 60px auto;
+      margin: 20px auto;
       max-width: 600px;
       padding: 0 20px;
       text-align: center;
@@ -61,7 +78,6 @@
       font-weight: bold;
     }
 
-    /* 🔁 Responsive: Stack cleanly on smaller screens */
     @media (max-width: 600px) {
       .treemap {
         flex-direction: column;
@@ -76,6 +92,17 @@
 <body>
 
   <div class="sidebar">apo_v01d</div>
+
+  <!-- 💸 Billionaire Counter -->
+  <div class="counter-container">
+    <div class="counter-text">
+      💸 You have $6,164.98 out of $1,000,000,000
+    </div>
+    <progress value="6164.98" max="1000000000"></progress>
+    <div class="counter-text">
+      🧗 Progress: 0.0006%
+    </div>
+  </div>
 
   <div class="container">
     <h1>apo</h1>
