@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>apo</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       background-color: white;
@@ -27,13 +26,37 @@
       text-align: center;
     }
 
-    canvas {
-      margin-top: 30px;
-      max-width: 400px;
-    }
-
     .section {
       margin-top: 20px;
+    }
+
+    .treemap {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 500px;
+      margin: 20px auto;
+    }
+
+    .block {
+      flex-grow: 1;
+      flex-basis: 100%;
+      margin: 2px;
+      color: white;
+      font-size: 14px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .block:nth-child(1) { background-color: #4e79a7; flex-basis: 70.2%; }
+    .block:nth-child(2) { background-color: #f28e2b; flex-basis: 16.1%; }
+    .block:nth-child(3) { background-color: #e15759; flex-basis: 9.0%; }
+    .block:nth-child(4) { background-color: #76b7b2; flex-basis: 4.4%; }
+    .block:nth-child(5) { background-color: #59a14f; flex-basis: 1.6%; }
+
+    .total {
+      margin-top: 10px;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -44,43 +67,26 @@
   <div class="container">
     <h1>apo</h1>
     <p>Independent research. Tactical risk. Creative intelligence.</p>
-  
 
     <div class="section">
-      <h3>Daily Performance (Fake placeholder)</h3>
-      <p>📊 Total Balance: $3,720.14</p>
+      <h3>Daily Performance</h3>
+      <p>📊 Total Balance: $6,164.98</p>
       <p>📈 Daily Return: +2.4%</p>
       <p>⚠️ Estimated Risk: Moderate</p>
     </div>
 
     <div class="section">
       <h3>Portfolio Allocation</h3>
-      <canvas id="portfolioChart"></canvas>
+      <div class="treemap">
+        <div class="block">BTC/USD CDF - $4268 (70.2%)</div>
+        <div class="block">Renda Fixa RBD - $980 (16.1%)</div>
+        <div class="block">USD Puro - $546.98 (9.0%)</div>
+        <div class="block">USD/CHF CDF - $270 (4.4%)</div>
+        <div class="block">BTC Real - $100 (1.6%)</div>
+      </div>
+      <div class="total">Total Portfolio: $6,164.98</div>
     </div>
+
   </div>
-
-  <script>
-    const ctx = document.getElementById('portfolioChart');
-    new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: ['BTC/USD', 'USD/CHF', 'EUR/USD'],
-        datasets: [{
-          label: 'Allocation',
-          data: [50, 30, 20],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          }
-        }
-      }
-    });
-  </script>
-
 </body>
 </html>
