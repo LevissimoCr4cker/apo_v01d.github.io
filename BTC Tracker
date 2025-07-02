@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BTC Tracker App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background-color: white;
+      color: black;
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 30px;
+    }
+
+    .download-btn {
+      background-color: black;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+    }
+
+    .download-btn:hover {
+      background-color: #4e79a7;
+    }
+
+    .back-link {
+      margin-top: 40px;
+      display: inline-block;
+      text-decoration: none;
+      color: #4e79a7;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📲 BTC Tracker App</h1>
+
+  <button class="download-btn" onclick="window.open('https://apps.zepp.com/', '_blank')">
+    Download BTC Tracker in Zepp App
+  </button>
+
+  <a href="index.html" class="back-link">← back to home</a>
+
+</body>
+</html>
