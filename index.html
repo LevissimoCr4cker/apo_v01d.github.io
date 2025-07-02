@@ -12,9 +12,37 @@
       padding: 0;
     }
 
+    /* 🌫️ Transparent Top Menu */
+    .menu {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      z-index: 1000;
+      padding: 10px 0;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .menu a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: black;
+      font-weight: bold;
+      font-size: 14px;
+      transition: color 0.3s;
+    }
+
+    .menu a:hover {
+      color: #4e79a7;
+    }
+
     .sidebar {
       position: absolute;
-      top: 10px;
+      top: 70px;
       left: 15px;
       font-size: 16px;
       font-weight: bold;
@@ -23,7 +51,7 @@
 
     .counter-container {
       text-align: center;
-      padding: 20px 20px 0 20px;
+      padding: 80px 20px 0 20px;
       background: #f9f9f9;
       border-bottom: 1px solid #ccc;
     }
@@ -91,6 +119,18 @@
 </head>
 <body>
 
+  <!-- 🌫️ Transparent Menu -->
+  <div class="menu">
+    <a href="obsidian.html">Obsidian</a>
+    <a href="#">Trader bot live</a>
+    <a href="#">$BTC heat map</a>
+    <a href="#">Volatility calculator</a>
+    <a href="#">Stock forecaster</a>
+    <a href="#">NFT portifolio</a>
+    <a href="#">apo_v01d world</a>
+    <a href="#">About</a>
+  </div>
+
   <div class="sidebar">apo_v01d</div>
 
   <!-- 💸 Billionaire Counter -->
@@ -128,7 +168,6 @@
       </div>
       <div class="total">Total Portfolio: $6,164.98</div>
     </div>
-
   </div>
 </body>
 </html>
