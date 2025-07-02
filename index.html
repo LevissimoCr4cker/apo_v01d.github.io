@@ -12,28 +12,40 @@
       padding: 0;
     }
 
-    /* 🌫️ Transparent Top Menu */
+    /* 🌱 Hamburger Menu */
+    .hamburger {
+      position: fixed;
+      top: 15px;
+      right: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1001;
+      background: none;
+      border: none;
+    }
+
     .menu {
       position: fixed;
       top: 0;
-      width: 100%;
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(8px);
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
+      right: 0;
+      width: 250px;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+      display: none;
+      flex-direction: column;
+      padding: 60px 20px;
       z-index: 1000;
-      padding: 10px 0;
-      border-bottom: 1px solid #ccc;
     }
 
     .menu a {
-      margin: 0 10px;
+      margin: 10px 0;
       text-decoration: none;
       color: black;
       font-weight: bold;
       font-size: 14px;
-      transition: color 0.3s;
     }
 
     .menu a:hover {
@@ -49,25 +61,8 @@
       opacity: 0.5;
     }
 
-    .counter-container {
-      text-align: center;
-      padding: 80px 20px 0 20px;
-      background: #f9f9f9;
-      border-bottom: 1px solid #ccc;
-    }
-
-    .counter-text {
-      margin-bottom: 8px;
-      font-weight: bold;
-    }
-
-    progress {
-      width: 80%;
-      height: 24px;
-    }
-
     .container {
-      margin: 20px auto;
+      margin: 100px auto 60px;
       max-width: 600px;
       padding: 0 20px;
       text-align: center;
@@ -106,6 +101,23 @@
       font-weight: bold;
     }
 
+    .progress-footer {
+      text-align: center;
+      padding: 30px 20px;
+      background: #f9f9f9;
+      border-top: 1px solid #ccc;
+    }
+
+    .progress-footer .counter-text {
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    progress {
+      width: 80%;
+      height: 20px;
+    }
+
     @media (max-width: 600px) {
       .treemap {
         flex-direction: column;
@@ -119,8 +131,11 @@
 </head>
 <body>
 
-  <!-- 🌫️ Transparent Menu -->
-  <div class="menu">
+  <!-- 🍔 Hamburger Icon -->
+  <button class="hamburger" onclick="toggleMenu()">☰</button>
+
+  <!-- 🌫️ Slide-out Menu -->
+  <div class="menu" id="menu">
     <a href="obsidian.html">Obsidian</a>
     <a href="#">Trader bot live</a>
     <a href="#">$BTC heat map</a>
@@ -132,17 +147,6 @@
   </div>
 
   <div class="sidebar">apo_v01d</div>
-
-  <!-- 💸 Billionaire Counter -->
-  <div class="counter-container">
-    <div class="counter-text">
-      💸 You have $6,164.98 out of $1,000,000,000
-    </div>
-    <progress value="6164.98" max="1000000000"></progress>
-    <div class="counter-text">
-      🧗 Progress: 0.0006%
-    </div>
-  </div>
 
   <div class="container">
     <h1>apo</h1>
@@ -169,5 +173,27 @@
       <div class="total">Total Portfolio: $6,164.98</div>
     </div>
   </div>
+
+  <!-- 📉 Progress Counter at Footer -->
+  <div class="progress-footer">
+    <div class="counter-text">
+      💸 You have $6,164.98 out of $1,000,000,000
+    </div>
+    <progress value="6164.98" max="1000000000"></progress>
+    <div class="counter-text">
+      🧗 Progress: 0.0006%
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('menu');
+      if (menu.style.display === 'flex') {
+        menu.style.display = 'none';
+      } else {
+        menu.style.display = 'flex';
+      }
+    }
+  </script>
 </body>
 </html>
