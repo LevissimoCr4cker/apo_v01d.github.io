@@ -150,7 +150,7 @@
         for (let h = 0; h < hours.length; h++) {
           x.push(h);
           y.push(d);
-          z.push(Math.random() * 40000 + 20000); // preço aleatório entre 20k e 60k
+          z.push(Math.random() * 40000 + 20000);
         }
       }
 
@@ -182,10 +182,9 @@
 
     function loadPeriod(period) {
       if (period === 'week') plotWeeklyCandle3D();
-      // outros períodos podem ser adicionados aqui
     }
 
-    plotWeeklyCandle3D(); // inicializa
+    plotWeeklyCandle3D();
   </script>
 </body>
 </html>
