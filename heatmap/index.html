@@ -6,139 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #111;
-      color: white;
-      overflow-x: hidden;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background-color: #0008;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-      margin: 0;
-    }
-
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
-
-    .dropbtn {
-      background-color: #222;
-      color: white;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      border: none;
-      cursor: pointer;
-      border-radius: 6px;
-    }
-
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      right: 0;
-      background-color: #222;
-      min-width: 160px;
-      border-radius: 6px;
-      box-shadow: 0px 8px 16px rgba(0,0,0,0.3);
-      z-index: 1;
-    }
-
-    .dropdown-content a {
-      color: white;
-      padding: 0.75rem 1rem;
-      text-decoration: none;
-      display: block;
-    }
-
-    .dropdown-content a:hover {
-      background-color: #333;
-    }
-
-    .dropdown:hover .dropdown-content {
-      display: block;
-    }
-
-    #graph {
-      width: 100%;
-      height: 75vh;
-    }
-
-    .info {
-      text-align: center;
-      background-color: #222;
-      padding: 1rem;
-      margin: 1rem auto;
-      max-width: 800px;
-      border-radius: 10px;
-    }
-
-    .info strong {
-      color: #ffcc00;
-    }
-
-    .back {
-      display: block;
-      text-align: center;
-      margin: 2rem auto;
-      color: #999;
-      text-decoration: none;
-    }
-
-    .back:hover {
-      color: white;
-    }
-
-    #custom-date-form {
-      display: none;
-      background-color: #222;
-      padding: 1rem;
-      margin: 1rem auto;
-      max-width: 800px;
-      border-radius: 10px;
-      text-align: center;
-    }
-
-    #custom-date-form input {
-      padding: 0.5rem;
-      margin: 0.5rem;
-      border-radius: 4px;
-      border: none;
-    }
-
-    #custom-date-form button {
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      border: none;
-      background-color: #555;
-      color: white;
-      cursor: pointer;
-    }
-
-    @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-      }
-
-      h1 {
-        font-size: 1.2rem;
-      }
-
-      .dropbtn {
-        width: 100%;
-      }
-    }
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #111; color: white; overflow-x: hidden; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background-color: #0008; }
+    h1 { font-size: 1.5rem; margin: 0; }
+    .dropdown { position: relative; display: inline-block; }
+    .dropbtn { background-color: #222; color: white; padding: 0.5rem 1rem; font-size: 1rem; border: none; cursor: pointer; border-radius: 6px; }
+    .dropdown-content { display: none; position: absolute; right: 0; background-color: #222; min-width: 160px; border-radius: 6px; box-shadow: 0px 8px 16px rgba(0,0,0,0.3); z-index: 1; }
+    .dropdown-content a { color: white; padding: 0.75rem 1rem; text-decoration: none; display: block; }
+    .dropdown-content a:hover { background-color: #333; }
+    .dropdown:hover .dropdown-content { display: block; }
+    #graph { width: 100%; height: 75vh; }
+    .info { text-align: center; background-color: #222; padding: 1rem; margin: 1rem auto; max-width: 800px; border-radius: 10px; }
+    .info strong { color: #ffcc00; }
+    .back { display: block; text-align: center; margin: 2rem auto; color: #999; text-decoration: none; }
+    .back:hover { color: white; }
+    #custom-date-form { display: none; background-color: #222; padding: 1rem; margin: 1rem auto; max-width: 800px; border-radius: 10px; text-align: center; }
+    #custom-date-form input { padding: 0.5rem; margin: 0.5rem; border-radius: 4px; border: none; }
+    #custom-date-form button { padding: 0.5rem 1rem; border-radius: 4px; border: none; background-color: #555; color: white; cursor: pointer; }
+    @media (max-width: 600px) { header { flex-direction: column; align-items: flex-start; gap: 0.5rem; } h1 { font-size: 1.2rem; } .dropbtn { width: 100%; } }
   </style>
 </head>
 <body>
@@ -171,114 +56,63 @@
   <a class="back" href="/index.html">← Return to Main Page</a>
 
   <script>
+    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+    const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
+    const twoYearsMs = 2 * 365 * 24 * 60 * 60 * 1000;
+
     function plotWeeklyCandle3D() {
-      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
       const hours = [...Array(24).keys()];
-      const z = [], x = [], y = [];
-      for (let d = 0; d < days.length; d++) {
-        for (let h = 0; h < hours.length; h++) {
-          x.push(h);
-          y.push(d);
-          z.push(Math.random() * 40000 + 20000);
-        }
-      }
-      drawGraph(x, y, z, 'Hour (UTC)', hours, 'Day of Week', [...Array(7).keys()], days);
+      const z=[], x=[], y=[];
+      days.forEach((day,d)=> hours.forEach(h=>{ x.push(h); y.push(d); z.push(Math.random()*40000+20000); }));
+      drawGraph(x,y,z,'Hour (UTC)',hours,'Day of Week',[...Array(7).keys()],days);
     }
 
     function plotMonthlyCandle3D() {
-      const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      const dates = [...Array(31).keys()].map(i => i + 1);
-      const z = [], x = [], y = [];
-      for (let d = 0; d < daysOfWeek.length; d++) {
-        for (let date of dates) {
-          x.push(date);
-          y.push(d);
-          z.push(Math.random() * 40000 + 20000);
-        }
-      }
-      drawGraph(x, y, z, 'Day of Month', dates, 'Day of Week', [...Array(7).keys()], daysOfWeek);
+      const daysOfWeek=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const dates=[...Array(31)].map((_,i)=>i+1);
+      const z=[], x=[], y=[];
+      daysOfWeek.forEach((_,d)=> dates.forEach(date=>{ x.push(date); y.push(d); z.push(Math.random()*40000+20000); }));
+      drawGraph(x,y,z,'Day of Month',dates,'Day of Week',[...Array(7).keys()],daysOfWeek);
     }
 
     function plotYearlyCandle3D() {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const days = [...Array(31).keys()].map(i => i + 1);
-      const z = [], x = [], y = [];
-      for (let m = 0; m < months.length; m++) {
-        for (let d = 0; d < days.length; d++) {
-          x.push(m);
-          y.push(d);
-          z.push(Math.random() * 40000 + 20000);
-        }
-      }
-      drawGraph(x, y, z, 'Month', [...Array(12).keys()], 'Day of Month', days, months);
+      const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const days=[...Array(31)].map((_,i)=>i+1);
+      const z=[], x=[], y=[];
+      months.forEach((_,m)=> days.forEach(dVal=>{ x.push(m); y.push(dVal); z.push(Math.random()*40000+20000); }));
+      drawGraph(x,y,z,'Month',[...Array(12).keys()],'Day of Month',days,months);
     }
 
-    function plotCustomCandle3D(start, end) {
-      const startDate = new Date(start);
-      const endDate = new Date(end);
-      const startYear = startDate.getFullYear();
-      const endYear = endDate.getFullYear();
-
-      const years = [];
-      for (let y = startYear; y <= endYear; y++) years.push(y);
-
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-      const z = [], x = [], y = [];
-      for (let yi = 0; yi < years.length; yi++) {
-        for (let mi = 0; mi < 12; mi++) {
-          x.push(mi);
-          y.push(yi);
-          z.push(Math.random() * 40000 + 20000);
-        }
-      }
-      drawGraph(x, y, z, 'Month', [...Array(12).keys()], 'Year', [...Array(years.length).keys()], years.map(y => y.toString()));
+    function plotCustomCandle3D(start,end) {
+      const s=new Date(start), e=new Date(end);
+      const diff=e-s;
+      if(diff<=oneMonthMs) { plotWeeklyCandle3D(); return; }
+      if(diff>oneMonthMs && diff<twoYearsMs) { plotMonthlyCandle3D(); return; }
+      // >2 years
+      const startYear=s.getFullYear(), endYear=e.getFullYear();
+      const years=Array.from({length:endYear-startYear+1},(_,i)=>startYear+i);
+      const months=[...Array(12).keys()];
+      const z=[], x=[], y=[];
+      years.forEach((yr,yi)=> months.forEach(mi=>{ x.push(mi); y.push(yi); z.push(Math.random()*40000+20000); }));
+      drawGraph(x,y,z,'Month',months,'Year',[...Array(years.length).keys()],years.map(String));
     }
 
-    function drawGraph(x, y, z, xTitle, xTicks, yTitle, yTicks, yText) {
-      const trace = {
-        x: x,
-        y: y,
-        z: z,
-        type: 'mesh3d',
-        opacity: 0.7,
-        intensity: z,
-        colorscale: 'YlOrRd',
-        showscale: false,
-        flatshading: true
-      };
-      const layout = {
-        scene: {
-          xaxis: { title: xTitle, tickvals: xTicks },
-          yaxis: { title: yTitle, tickvals: yTicks, ticktext: yText },
-          zaxis: { title: 'Price (USD)' }
-        },
-        paper_bgcolor: '#111',
-        font: { color: 'white' },
-        margin: { l: 0, r: 0, b: 0, t: 0 }
-      };
-      Plotly.newPlot('graph', [trace], layout, { responsive: true });
+    function drawGraph(x,y,z,xTitle,xTicks,yTitle,yTicks,yText) {
+      Plotly.newPlot('graph',[{x,y,z,type:'mesh3d',opacity:0.7,intensity:z,colorscale:'YlOrRd',showscale:false,flatshading:true}],{
+        scene:{xaxis:{title:xTitle,tickvals:xTicks,ticktext:xTicks},yaxis:{title:yTitle,tickvals:yTicks,ticktext:yText},zaxis:{title:'Price (USD)'}},paper_bgcolor:'#111',font:{color:'white'},margin:{l:0,r:0,b:0,t:0}
+      },{responsive:true});
     }
 
     function loadPeriod(period) {
-      document.getElementById('custom-date-form').style.display = 'none';
-      if (period === 'week') plotWeeklyCandle3D();
-      else if (period === 'month') plotMonthlyCandle3D();
-      else if (period === 'year') plotYearlyCandle3D();
+      document.getElementById('custom-date-form').style.display='none';
+      if(period==='week') plotWeeklyCandle3D();
+      else if(period==='month') plotMonthlyCandle3D();
+      else if(period==='year') plotYearlyCandle3D();
     }
 
-    function showCustomForm() {
-      document.getElementById('custom-date-form').style.display = 'block';
-    }
-
-    function submitCustomDates() {
-      const start = document.getElementById('start-date').value;
-      const end = document.getElementById('end-date').value;
-      if (start && end) {
-        document.getElementById('custom-date-form').style.display = 'none';
-        plotCustomCandle3D(start, end);
-      }
-    }
+    function showCustomForm(){ document.getElementById('custom-date-form').style.display='block'; }
+    function submitCustomDates(){ const s=document.getElementById('start-date').value; const e=document.getElementById('end-date').value; if(s&&e){ document.getElementById('custom-date-form').style.display='none'; plotCustomCandle3D(s,e);} }
 
     plotWeeklyCandle3D();
   </script>
