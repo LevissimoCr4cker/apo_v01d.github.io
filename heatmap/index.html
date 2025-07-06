@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>🔥 BTC Heatmap</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -39,89 +39,101 @@
       </div>
     </div>
   </header>
-
   <div id="custom-date-form">
     <label>Start Date: <input type="date" id="start-date"></label>
     <label>End Date: <input type="date" id="end-date"></label>
     <button onclick="submitCustomDates()">Apply</button>
   </div>
-
   <div id="graph"></div>
-
   <div class="info">
     <p><strong>Analysis:</strong> Bullish for the next hour · Bullish for the day</p>
     <p><strong>Whale Alert:</strong> Someone bought 100K BTC</p>
   </div>
-
   <a class="back" href="/index.html">← Return to Main Page</a>
-
   <script>
+    const API_BASE = 'https://api.binance.com';
+    const SYMBOL = 'BTCUSDT';
     const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
     const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
     const twoYearsMs = 2 * 365 * 24 * 60 * 60 * 1000;
 
-    function plotWeeklyCandle3D() {
-      const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    async function fetchKlines(symbol, interval, startTime, endTime) {
+      const url = `${API_BASE}/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${startTime}&endTime=${endTime}&limit=1000`;
+      const res = await fetch(url);
+      return res.json();
+    }
+
+    async function plotWeeklyCandle3D() {
+      const now = Date.now();
+      const from = now - oneWeekMs;
+      const klines = await fetchKlines(SYMBOL, '1h', from, now);
       const hours = [...Array(24).keys()];
-      const z=[], x=[], y=[];
-      days.forEach((day,d)=> hours.forEach(h=>{ x.push(h); y.push(d); z.push(Math.random()*40000+20000); }));
-      drawGraph(x,y,z,'Hour (UTC)',hours,'Day of Week',[...Array(7).keys()],days);
+      const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const x = [], y = [], z = [];
+      klines.forEach(k => {
+        const close = parseFloat(k[4]);
+        const d = (new Date(k[0]).getUTCDay() + 6) % 7;
+        const h = new Date(k[0]).getUTCHours();
+        x.push(h); y.push(d); z.push(close);
+      });
+      drawGraph(x, y, z,
+                'Hour (UTC)', hours.map(h => h), hours.map(h => `${h}:00`),
+                'Day of Week', days.map((_,i) => i), days);
+      setTimeout(plotWeeklyCandle3D, 60 * 1000);
     }
 
     function plotMonthlyCandle3D() {
       const daysOfWeek=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
       const dates=[...Array(31)].map((_,i)=>i+1);
-      const z=[], x=[], y=[];
-      daysOfWeek.forEach((_,d)=> dates.forEach(date=>{ x.push(date); y.push(d); z.push(Math.random()*40000+20000); }));
-      drawGraph(x,y,z,'Day of Month',dates,'Day of Week',[...Array(7).keys()],daysOfWeek);
+      const x=[], y=[], z=[];
+      dates.forEach((date) => daysOfWeek.forEach((_,d) => { x.push(date); y.push(d); z.push(Math.random()*40000+20000); }));
+      drawGraph(x, y, z,
+                'Day of Month', dates, dates.map(String),
+                'Day of Week', daysOfWeek.map((_,i)=>i), daysOfWeek);
     }
 
     function plotYearlyCandle3D() {
       const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const days=[...Array(31)].map((_,i)=>i+1);
-      const z=[], x=[], y=[];
-      months.forEach((_,m)=> days.forEach(dVal=>{ x.push(m); y.push(dVal); z.push(Math.random()*40000+20000); }));
-      drawGraph(x,y,z,'Month',[...Array(12).keys()],'Day of Month',days,months);
+      const x=[], y=[], z=[];
+      months.forEach((_,m) => days.forEach(d => { x.push(m); y.push(d); z.push(Math.random()*40000+20000); }));
+      drawGraph(x, y, z,
+                'Month', [...Array(12)].map((_,i)=>i), months,
+                'Day of Month', days.map((_,i)=>i+1), days.map(String));
     }
 
-    function plotCustomCandle3D(start,end) {
-      const s=new Date(start), e=new Date(end);
-      const diff=e-s;
-      if(diff<=oneMonthMs) { plotWeeklyCandle3D(); return; }
+    function plotCustomCandle3D(start, end) {
+      const s=new Date(start), e=new Date(end), diff=e-s;
+      if(diff<=oneWeekMs) { plotWeeklyCandle3D(); return; }
+      if(diff>oneWeekMs && diff<=oneMonthMs) { plotWeeklyCandle3D(); return; }
       if(diff>oneMonthMs && diff<twoYearsMs) { plotMonthlyCandle3D(); return; }
-      // >2 years
-      const startYear=s.getFullYear(), endYear=e.getFullYear();
-      const years=Array.from({length:endYear-startYear+1},(_,i)=>startYear+i);
-      const months=[...Array(12).keys()];
-      const z=[], x=[], y=[];
-      years.forEach((yr,yi)=> months.forEach(mi=>{ x.push(mi); y.push(yi); z.push(Math.random()*40000+20000); }));
-      drawGraph(x,y,z,'Month',months,'Year',[...Array(years.length).keys()],years.map(String));
+      const years=Array.from({length:new Date(end).getFullYear()-new Date(start).getFullYear()+1},(_,i)=>new Date(start).getFullYear()+i);
+      const monthsIdx=[...Array(12).keys()];
+      const x=[], y=[], z=[];
+      years.forEach((yr,iY) => monthsIdx.forEach(m => { x.push(m); y.push(iY); z.push(Math.random()*40000+20000); }));
+      drawGraph(x, y, z,
+                'Month', monthsIdx, ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                'Year', years.map((_,i)=>i), years.map(String));
     }
 
-    function drawGraph(x,y,z,xTitle,xTicks,xText,yTitle,yTicks,yText) {
-      Plotly.newPlot('graph',[{x,y,z,type:'mesh3d',opacity:0.7,intensity:z,colorscale:'YlOrRd',showscale:false,flatshading:true}],{
+    function drawGraph(x, y, z, xTitle, xTicks, xText, yTitle, yTicks, yText) {
+      Plotly.newPlot('graph', [{ x, y, z, type:'mesh3d', flatshading:true, intensity:z, colorscale:'YlOrRd', showscale:false }], {
         scene:{
-          xaxis:{title:xTitle,tickvals:xTicks,ticktext:xText},
-          yaxis:{title:yTitle,tickvals:yTicks,ticktext:yText},
-          zaxis:{title:'Price (USD)'}
-        },paper_bgcolor:'#111',font:{color:'white'},margin:{l:0,r:0,b:0,t:0}
-      },{responsive:true});
+          xaxis:{ title:xTitle, tickvals:xTicks, ticktext:xText },
+          yaxis:{ title:yTitle, tickvals:yTicks, ticktext:yText },
+          zaxis:{ title:'Price (USD)' }
+        }, paper_bgcolor:'#111', font:{ color:'white' }, margin:{ l:0, r:0, b:0, t:0 }
+      }, { responsive:true });
     }
 
-    function plotWeeklyCandle3D() {
-      const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-      const hours=[...Array(24).keys()];
-      const labels=hours.map(h=>`${h}:00`);
-      const z=[],x=[],y=[];
-      days.forEach((_,d)=>hours.forEach(h=>{x.push(h);y.push(d);z.push(Math.random()*40000+20000);}));
-      drawGraph(x,y,z,'Hour (UTC)',hours,labels,'Day of Week',[...Array(7).keys()],days);
-    }();
+    function loadPeriod(period) {
+      document.getElementById('custom-date-form').style.display='none';
+      if(period==='week') plotWeeklyCandle3D();
       else if(period==='month') plotMonthlyCandle3D();
       else if(period==='year') plotYearlyCandle3D();
     }
-
     function showCustomForm(){ document.getElementById('custom-date-form').style.display='block'; }
-    function submitCustomDates(){ const s=document.getElementById('start-date').value; const e=document.getElementById('end-date').value; if(s&&e){ document.getElementById('custom-date-form').style.display='none'; plotCustomCandle3D(s,e);} }
+    function submitCustomDates(){ const s=document.getElementById('start-date').value; const e=document.getElementById('end-date').value; if(s&&e){ document.getElementById('custom-date-form').style.display='none'; plotCustomCandle3D(s,e); } }
 
     plotWeeklyCandle3D();
   </script>
