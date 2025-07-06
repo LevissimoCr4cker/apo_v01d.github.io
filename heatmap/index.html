@@ -119,7 +119,7 @@
   <header>
     <h1>🔥 BTC Heatmap</h1>
     <div class="dropdown">
-      <button class="dropbtn">Period ⎿</button>
+      <button class="dropbtn">Period ⎏</button>
       <div class="dropdown-content">
         <a href="#" onclick="loadPeriod('week')">This Week</a>
         <a href="#" onclick="loadPeriod('month')">This Month</a>
@@ -152,7 +152,7 @@
         }
       }
 
-      drawGraph(x, y, z, 'Hour (UTC)', [...Array(24).keys()], 'Day of Week', [...Array(7).keys()], days);
+      drawGraph(x, y, z, 'Hour (UTC)', hours, 'Day of Week', [...Array(7).keys()], days);
     }
 
     function plotMonthlyCandle3D() {
@@ -168,7 +168,7 @@
         }
       }
 
-      drawGraph(x, y, z, 'Day', dates, 'Day of Week', [...Array(7).keys()], daysOfWeek);
+      drawGraph(x, y, z, 'Day of Month', dates, 'Day of Week', [...Array(7).keys()], daysOfWeek);
     }
 
     function plotYearlyCandle3D() {
@@ -177,14 +177,30 @@
       const z = [], x = [], y = [];
 
       for (let m = 0; m < months.length; m++) {
-        for (let d of days) {
+        for (let d = 0; d < days.length; d++) {
           x.push(m);
           y.push(d);
           z.push(Math.random() * 40000 + 20000);
         }
       }
 
-      drawGraph(x, y, z, 'Month', [...Array(12).keys()], 'Day', days, months);
+      drawGraph(x, y, z, 'Month', [...Array(12).keys()], 'Day of Month', days, months);
+    }
+
+    function plotCustomCandle3D() {
+      const years = ['2021', '2022', '2023', '2024', '2025'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const z = [], x = [], y = [];
+
+      for (let yIdx = 0; yIdx < years.length; yIdx++) {
+        for (let mIdx = 0; mIdx < months.length; mIdx++) {
+          x.push(mIdx);
+          y.push(yIdx);
+          z.push(Math.random() * 40000 + 20000);
+        }
+      }
+
+      drawGraph(x, y, z, 'Month', [...Array(12).keys()], 'Year', [...Array(years.length).keys()], years);
     }
 
     function drawGraph(x, y, z, xTitle, xTicks, yTitle, yTicks, yText) {
@@ -218,6 +234,7 @@
       if (period === 'week') plotWeeklyCandle3D();
       else if (period === 'month') plotMonthlyCandle3D();
       else if (period === 'year') plotYearlyCandle3D();
+      else if (period === 'custom') plotCustomCandle3D();
     }
 
     plotWeeklyCandle3D();
