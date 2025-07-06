@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bitcoin Hug</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #111;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    canvas {
+      width: 300px;
+      height: 300px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 10px;
+      background-color: #ff9900;
+      color: #111;
+      cursor: pointer;
+    }
+    .message {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #ccc;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧸 Bitcoin Hug</h1>
+  <canvas id="hugModel"></canvas>
+  <button onclick="giveHug()">Bitcoin Hug</button>
+  <div class="message hidden" id="hugMessage">Don't cry bro... buy more Bitcoin 🧡<br><a href="https://www.binance.com" target="_blank" style="color:#ffcc00">→ Go to Binance</a></div>
+
+  <script>
+    // placeholder wobbly 3D blob using canvas (for concept only)
+    const canvas = document.getElementById('hugModel');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 300;
+    canvas.height = 300;
+
+    let t = 0;
+
+    function drawBlob() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+      const cx = 150, cy = 150, r = 60;
+      ctx.moveTo(cx + r * Math.cos(0), cy + r * Math.sin(0));
+      for (let i = 0; i <= 2 * Math.PI; i += 0.1) {
+        const offset = Math.sin(i * 5 + t) * 10;
+        const x = cx + (r + offset) * Math.cos(i);
+        const y = cy + (r + offset) * Math.sin(i);
+        ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'orange';
+      ctx.fill();
+      t += 0.1;
+    }
+
+    setInterval(drawBlob, 100);
+
+    function giveHug() {
+      document.getElementById('hugMessage').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
