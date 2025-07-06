@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BTC Heatmap</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Sidebar direita -->
+    <aside class="sidebar">
+      <h2>🔥 Heat Map</h2>
+
+      <div class="section">
+        <button onclick="loadHeatmap('monthly')">📅 This Month</button>
+        <button onclick="loadHeatmap('yearly')">📈 This Year</button>
+        <button onclick="loadHeatmap('historical')">🕰️ Choose Period</button>
+      </div>
+
+      <div class="section">
+        <h3>🎨 Color Mode</h3>
+        <button onclick="setTheme('greenred')">Green / Red</button>
+        <button onclick="setTheme('bw')">Black / White</button>
+        <button onclick="setTheme('thermal')">Thermal</button>
+      </div>
+
+      <div class="section">
+        <a href="/index.html" class="btn-back">← Return to Main Page</a>
+      </div>
+    </aside>
+
+    <!-- Conteúdo principal -->
+    <main>
+      <div id="heatmap" style="width: 100%; height: 60vh;"></div>
+
+      <div class="info-bar">
+        <p>📊 <strong>Analysis:</strong> Bullish for the next hour · Bullish for the day</p>
+        <p>🐋 <strong>Whale Alert:</strong> Someone bought 100K BTC</p>
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    function loadHeatmap(type) {
+      const oldScripts = document.querySelectorAll("script[data-heatmap]");
+      oldScripts.forEach(s => s.remove());
+
+      const script = document.createElement('script');
+      script.src = `${type}.js`;
+      script.setAttribute('data-heatmap', 'true');
+      document.body.appendChild(script);
+    }
+
+    function setTheme(theme) {
+      alert("Color mode changed to: " + theme); // Placeholder
+    }
+
+    loadHeatmap('monthly'); // Default
+  </script>
+</body>
+</html>
