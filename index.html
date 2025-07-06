@@ -1,177 +1,200 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
+  <title>portifolio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BTC Heatmap + Menu</title>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
     body {
+      background-color: white;
+      color: black;
+      font-family: monospace;
       margin: 0;
-      background-color: #111;
-      color: white;
-      font-family: Arial, sans-serif;
+      padding: 0;
+    }
+
+    /* 🌱 Hamburger Menu */
+    .hamburger {
+      position: fixed;
+      top: 15px;
+      right: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1001;
+      background: none;
+      border: none;
+    }
+
+    .menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 250px;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+      display: none;
+      flex-direction: column;
+      padding: 60px 20px;
+      z-index: 1000;
+    }
+
+    .menu a {
+      margin: 10px 0;
+      text-decoration: none;
+      color: black;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .menu a:hover {
+      color: #4e79a7;
+    }
+
+    .sidebar {
+      position: absolute;
+      top: 70px;
+      left: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      opacity: 0.5;
     }
 
     .container {
-      max-width: 1000px;
-      margin: auto;
-      padding: 20px;
-      position: relative;
+      margin: 100px auto 60px;
+      max-width: 600px;
+      padding: 0 20px;
+      text-align: center;
     }
 
-    h1 {
-      text-align: center;
-      font-weight: 300;
+    .section {
       margin-top: 20px;
     }
 
-    #heatmap {
+    .treemap {
+      display: flex;
+      flex-wrap: wrap;
       width: 100%;
-      height: 60vh;
+      max-width: 500px;
+      margin: 20px auto;
     }
 
-    .info {
-      margin-top: 20px;
-      padding: 15px;
-      background: #222;
-      border-radius: 8px;
-    }
-
-    .back {
-      display: block;
-      text-align: center;
-      margin-top: 30px;
-      color: #aaa;
-      text-decoration: none;
-    }
-    .back:hover { color: white; }
-
-    /* MENU */
-    .menu-button {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid #444;
-      border-radius: 8px;
-      padding: 10px 15px;
-      cursor: pointer;
-      z-index: 999;
-      transition: background 0.3s;
-    }
-    .menu-button:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    .menu-content {
-      position: fixed;
-      top: 60px;
-      right: 20px;
-      background: rgba(30, 30, 30, 0.9);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 15px;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-      width: 220px;
-      z-index: 999;
-    }
-
-    .menu-content button {
-      background: #333;
-      border: none;
+    .block {
+      flex-grow: 1;
+      flex-basis: 100%;
+      margin: 2px;
+      color: white;
+      font-size: 14px;
       padding: 10px;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-      transition: background 0.3s;
+      box-sizing: border-box;
     }
 
-    .menu-content button:hover {
-      background: #555;
+    .block:nth-child(1) { background-color: #4e79a7; flex-basis: 70.2%; }
+    .block:nth-child(2) { background-color: #f28e2b; flex-basis: 16.1%; }
+    .block:nth-child(3) { background-color: #e15759; flex-basis: 9.0%; }
+    .block:nth-child(4) { background-color: #76b7b2; flex-basis: 4.4%; }
+    .block:nth-child(5) { background-color: #59a14f; flex-basis: 1.6%; }
+
+    .total {
+      margin-top: 10px;
+      font-weight: bold;
     }
 
-    .menu-content input[type="date"] {
-      background: #222;
-      color: white;
-      border: none;
-      padding: 8px;
-      border-radius: 6px;
-      width: 100%;
+    .progress-footer {
+      text-align: center;
+      padding: 30px 20px;
+      background: #f9f9f9;
+      border-top: 1px solid #ccc;
     }
 
-    .custom-dates {
-      display: none;
-      flex-direction: column;
-      gap: 10px;
+    .progress-footer .counter-text {
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    progress {
+      width: 80%;
+      height: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .treemap {
+        flex-direction: column;
+      }
+      .block {
+        flex-basis: auto !important;
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="menu-button" onclick="toggleMenu()">☰ Period</div>
 
-  <div class="menu-content" id="menu">
-    <button onclick="selectPeriod('week')">This Week</button>
-    <button onclick="selectPeriod('month')">This Month</button>
-    <button onclick="selectPeriod('year')">This Year</button>
-    <button onclick="toggleCustomDates()">Custom</button>
+  <!-- 🍔 Hamburger Icon -->
+  <button class="hamburger" onclick="toggleMenu()">☰</button>
 
-    <div class="custom-dates" id="customDates">
-      <input type="date" id="from" min="2020-01-01" max="2030-01-01">
-      <input type="date" id="to" min="2020-01-01" max="2030-01-01">
+  <!-- 🌫️ Slide-out Menu -->
+  <div class="menu" id="menu">
+    <a href="obsidian.html">Obsidian</a>
+    <a href="#">Trader bot live</a>
+    <a href="heatmap">$BTC heat map</a>
+    <a href="btc-tracker.html">BTC Tracker App</a>
+    <a href="#">Volatility calculator</a>
+    <a href="#">Stock forecaster</a>
+    <a href="https://t.co/aURsM0g8Nm" target="_blank">NFT portifolio</a>
+    <a href="#">apo_v01d world</a>
+    <a href="about.html">About</a>
+  </div>
+
+  <div class="sidebar">apo_v01d</div>
+
+  <div class="container">
+    <h1>apo</h1>
+    <p>Independent research. Tactical risk. Creative intelligence.</p>
+
+    <div class="section">
+      <h3>Performance Overview</h3>
+      <p>📊 Total Balance: $6,164.98</p>
+      <p>📈 Daily Return: +2.4%</p>
+      <p>📅 Monthly Average Return: +111.7%</p>
+      <p>📈 Portfolio Growth (since start): +$4,984.98</p>
+      <p>⚠️ Estimated Risk: High</p>
+    </div>
+
+    <div class="section">
+      <h3>Portfolio Allocation</h3>
+      <div class="treemap">
+        <div class="block">BTC/USD CDF - $4268 (70.2%)</div>
+        <div class="block">Renda Fixa RBD - $980 (16.1%)</div>
+        <div class="block">USD Puro - $546.98 (9.0%)</div>
+        <div class="block">USD/CHF CDF - $270 (4.4%)</div>
+        <div class="block">BTC Real - $100 (1.6%)</div>
+      </div>
+      <div class="total">Total Portfolio: $6,164.98</div>
     </div>
   </div>
 
-  <div class="container">
-    <h1>🔥 BTC Heatmap</h1>
-    <div id="heatmap"></div>
-    <div class="info">
-      <p><strong>Analysis:</strong> Bullish for the next hour · Bullish for the day</p>
-      <p><strong>Whale Alert:</strong> Someone bought 100K BTC</p>
+  <!-- 📉 Progress Counter at Footer -->
+  <div class="progress-footer">
+    <div class="counter-text">
+      💸 You have $6,164.98 out of $1,000,000,000
     </div>
-    <a href="/index.html" class="back">&larr; Return to Main Page</a>
+    <progress value="6164.98" max="1000000000"></progress>
+    <div class="counter-text">
+      🧗 Progress: 0.0006%
+    </div>
   </div>
 
   <script>
     function toggleMenu() {
-      const menu = document.getElementById("menu");
-      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+      const menu = document.getElementById('menu');
+      if (menu.style.display === 'flex') {
+        menu.style.display = 'none';
+      } else {
+        menu.style.display = 'flex';
+      }
     }
-
-    function toggleCustomDates() {
-      const custom = document.getElementById("customDates");
-      custom.style.display = custom.style.display === "flex" ? "none" : "flex";
-    }
-
-    function selectPeriod(period) {
-      alert("Selected period: " + period);
-      // hook your logic here
-    }
-
-    const z = Array.from({ length: 7 }, () =>
-      Array.from({ length: 24 }, () => Math.random() * 100)
-    );
-
-    const data = [{
-      z: z,
-      x: Array.from({ length: 24 }, (_, i) => `${i}:00`),
-      y: ['Sun', 'Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon'],
-      type: 'heatmap',
-      colorscale: 'YlOrRd'
-    }];
-
-    const layout = {
-      margin: { t: 30 },
-      paper_bgcolor: '#111',
-      plot_bgcolor: '#111',
-      font: { color: 'white' },
-      xaxis: { title: 'Hour (UTC)' },
-      yaxis: { title: 'Day of Week' }
-    };
-
-    Plotly.newPlot('heatmap', data, layout);
   </script>
 </body>
 </html>
