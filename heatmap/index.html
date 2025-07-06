@@ -98,15 +98,24 @@
       drawGraph(x,y,z,'Month',months,'Year',[...Array(years.length).keys()],years.map(String));
     }
 
-    function drawGraph(x,y,z,xTitle,xTicks,yTitle,yTicks,yText) {
+    function drawGraph(x,y,z,xTitle,xTicks,xText,yTitle,yTicks,yText) {
       Plotly.newPlot('graph',[{x,y,z,type:'mesh3d',opacity:0.7,intensity:z,colorscale:'YlOrRd',showscale:false,flatshading:true}],{
-        scene:{xaxis:{title:xTitle,tickvals:xTicks,ticktext:xTicks},yaxis:{title:yTitle,tickvals:yTicks,ticktext:yText},zaxis:{title:'Price (USD)'}},paper_bgcolor:'#111',font:{color:'white'},margin:{l:0,r:0,b:0,t:0}
+        scene:{
+          xaxis:{title:xTitle,tickvals:xTicks,ticktext:xText},
+          yaxis:{title:yTitle,tickvals:yTicks,ticktext:yText},
+          zaxis:{title:'Price (USD)'}
+        },paper_bgcolor:'#111',font:{color:'white'},margin:{l:0,r:0,b:0,t:0}
       },{responsive:true});
     }
 
-    function loadPeriod(period) {
-      document.getElementById('custom-date-form').style.display='none';
-      if(period==='week') plotWeeklyCandle3D();
+    function plotWeeklyCandle3D() {
+      const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      const hours=[...Array(24).keys()];
+      const labels=hours.map(h=>`${h}:00`);
+      const z=[],x=[],y=[];
+      days.forEach((_,d)=>hours.forEach(h=>{x.push(h);y.push(d);z.push(Math.random()*40000+20000);}));
+      drawGraph(x,y,z,'Hour (UTC)',hours,labels,'Day of Week',[...Array(7).keys()],days);
+    }();
       else if(period==='month') plotMonthlyCandle3D();
       else if(period==='year') plotYearlyCandle3D();
     }
