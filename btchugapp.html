@@ -20,6 +20,7 @@
     canvas {
       width: 300px;
       height: 300px;
+      touch-action: none;
     }
     button {
       margin-top: 20px;
@@ -48,13 +49,32 @@
   <div class="message hidden" id="hugMessage">Don't cry bro... buy more Bitcoin 🧡<br><a href="https://www.binance.com" target="_blank" style="color:#ffcc00">→ Go to Binance</a></div>
 
   <script>
-    // placeholder wobbly 3D blob using canvas (for concept only)
     const canvas = document.getElementById('hugModel');
     const ctx = canvas.getContext('2d');
     canvas.width = 300;
     canvas.height = 300;
 
     let t = 0;
+    let dragging = false;
+    let dragX = 0;
+    let dragY = 0;
+
+    canvas.addEventListener('mousedown', (e) => {
+      dragging = true;
+      dragX = e.offsetX;
+      dragY = e.offsetY;
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      dragging = false;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (dragging) {
+        dragX = e.offsetX;
+        dragY = e.offsetY;
+      }
+    });
 
     function drawBlob() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -62,7 +82,12 @@
       const cx = 150, cy = 150, r = 60;
       ctx.moveTo(cx + r * Math.cos(0), cy + r * Math.sin(0));
       for (let i = 0; i <= 2 * Math.PI; i += 0.1) {
-        const offset = Math.sin(i * 5 + t) * 10;
+        let offset = Math.sin(i * 5 + t) * 10;
+        if (dragging) {
+          const dx = dragX - cx;
+          const dy = dragY - cy;
+          offset += Math.sin(i * 3 + t) * 5 + dx * 0.05 + dy * 0.05;
+        }
         const x = cx + (r + offset) * Math.cos(i);
         const y = cy + (r + offset) * Math.sin(i);
         ctx.lineTo(x, y);
@@ -73,10 +98,18 @@
       t += 0.1;
     }
 
-    setInterval(drawBlob, 100);
+    setInterval(drawBlob, 40);
 
     function giveHug() {
-      document.getElementById('hugMessage').classList.remove('hidden');
+      const msg = document.getElementById('hugMessage');
+      msg.classList.remove('hidden');
+      msg.style.opacity = 0;
+      msg.innerHTML = "🤗 Virtual hug incoming...";
+
+      setTimeout(() => {
+        msg.innerHTML = "Don't cry bro... buy more Bitcoin 🧡<br><a href=\"https://www.binance.com\" target=\"_blank\" style=\"color:#ffcc00\">→ Go to Binance</a>";
+        msg.style.opacity = 1;
+      }, 2000);
     }
   </script>
 </body>
