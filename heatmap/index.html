@@ -98,6 +98,32 @@
       color: white;
     }
 
+    #custom-date-form {
+      display: none;
+      background-color: #222;
+      padding: 1rem;
+      margin: 1rem auto;
+      max-width: 800px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    #custom-date-form input {
+      padding: 0.5rem;
+      margin: 0.5rem;
+      border-radius: 4px;
+      border: none;
+    }
+
+    #custom-date-form button {
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      border: none;
+      background-color: #555;
+      color: white;
+      cursor: pointer;
+    }
+
     @media (max-width: 600px) {
       header {
         flex-direction: column;
@@ -124,10 +150,16 @@
         <a href="#" onclick="loadPeriod('week')">This Week</a>
         <a href="#" onclick="loadPeriod('month')">This Month</a>
         <a href="#" onclick="loadPeriod('year')">This Year</a>
-        <a href="#" onclick="loadPeriod('custom')">Custom</a>
+        <a href="#" onclick="showCustomForm()">Custom</a>
       </div>
     </div>
   </header>
+
+  <div id="custom-date-form">
+    <label>Start Date: <input type="date" id="start-date"></label>
+    <label>End Date: <input type="date" id="end-date"></label>
+    <button onclick="submitCustomDates()">Apply</button>
+  </div>
 
   <div id="graph"></div>
 
@@ -143,7 +175,6 @@
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       const hours = [...Array(24).keys()];
       const z = [], x = [], y = [];
-
       for (let d = 0; d < days.length; d++) {
         for (let h = 0; h < hours.length; h++) {
           x.push(h);
@@ -151,7 +182,6 @@
           z.push(Math.random() * 40000 + 20000);
         }
       }
-
       drawGraph(x, y, z, 'Hour (UTC)', hours, 'Day of Week', [...Array(7).keys()], days);
     }
 
@@ -159,7 +189,6 @@
       const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       const dates = [...Array(31).keys()].map(i => i + 1);
       const z = [], x = [], y = [];
-
       for (let d = 0; d < daysOfWeek.length; d++) {
         for (let date of dates) {
           x.push(date);
@@ -167,7 +196,6 @@
           z.push(Math.random() * 40000 + 20000);
         }
       }
-
       drawGraph(x, y, z, 'Day of Month', dates, 'Day of Week', [...Array(7).keys()], daysOfWeek);
     }
 
@@ -175,7 +203,6 @@
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const days = [...Array(31).keys()].map(i => i + 1);
       const z = [], x = [], y = [];
-
       for (let m = 0; m < months.length; m++) {
         for (let d = 0; d < days.length; d++) {
           x.push(m);
@@ -183,24 +210,29 @@
           z.push(Math.random() * 40000 + 20000);
         }
       }
-
       drawGraph(x, y, z, 'Month', [...Array(12).keys()], 'Day of Month', days, months);
     }
 
-    function plotCustomCandle3D() {
-      const years = ['2021', '2022', '2023', '2024', '2025'];
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const z = [], x = [], y = [];
+    function plotCustomCandle3D(start, end) {
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      const startYear = startDate.getFullYear();
+      const endYear = endDate.getFullYear();
 
-      for (let yIdx = 0; yIdx < years.length; yIdx++) {
-        for (let mIdx = 0; mIdx < months.length; mIdx++) {
-          x.push(mIdx);
-          y.push(yIdx);
+      const years = [];
+      for (let y = startYear; y <= endYear; y++) years.push(y);
+
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      const z = [], x = [], y = [];
+      for (let yi = 0; yi < years.length; yi++) {
+        for (let mi = 0; mi < 12; mi++) {
+          x.push(mi);
+          y.push(yi);
           z.push(Math.random() * 40000 + 20000);
         }
       }
-
-      drawGraph(x, y, z, 'Month', [...Array(12).keys()], 'Year', [...Array(years.length).keys()], years);
+      drawGraph(x, y, z, 'Month', [...Array(12).keys()], 'Year', [...Array(years.length).keys()], years.map(y => y.toString()));
     }
 
     function drawGraph(x, y, z, xTitle, xTicks, yTitle, yTicks, yText) {
@@ -215,7 +247,6 @@
         showscale: false,
         flatshading: true
       };
-
       const layout = {
         scene: {
           xaxis: { title: xTitle, tickvals: xTicks },
@@ -226,15 +257,27 @@
         font: { color: 'white' },
         margin: { l: 0, r: 0, b: 0, t: 0 }
       };
-
       Plotly.newPlot('graph', [trace], layout, { responsive: true });
     }
 
     function loadPeriod(period) {
+      document.getElementById('custom-date-form').style.display = 'none';
       if (period === 'week') plotWeeklyCandle3D();
       else if (period === 'month') plotMonthlyCandle3D();
       else if (period === 'year') plotYearlyCandle3D();
-      else if (period === 'custom') plotCustomCandle3D();
+    }
+
+    function showCustomForm() {
+      document.getElementById('custom-date-form').style.display = 'block';
+    }
+
+    function submitCustomDates() {
+      const start = document.getElementById('start-date').value;
+      const end = document.getElementById('end-date').value;
+      if (start && end) {
+        document.getElementById('custom-date-form').style.display = 'none';
+        plotCustomCandle3D(start, end);
+      }
     }
 
     plotWeeklyCandle3D();
