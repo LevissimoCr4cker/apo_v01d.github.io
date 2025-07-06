@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BTC Heatmap</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin: 20px 0;
+      font-weight: 400;
+      text-align: center;
+    }
+
+    #heatmap {
+      width: 95%;
+      max-width: 1000px;
+      height: 60vh;
+    }
+
+    .info {
+      margin-top: 20px;
+      padding: 10px;
+      background: #222;
+      border-radius: 8px;
+      width: 95%;
+      max-width: 1000px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .back {
+      margin: 30px 0;
+      text-decoration: none;
+      color: #aaa;
+    }
+
+    .back:hover {
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔥 BTC Heatmap</h1>
+
+  <div id="heatmap"></div>
+
+  <div class="info">
+    <p><strong>Analysis:</strong> Bullish for the next hour · Bullish for the day</p>
+    <p><strong>Whale Alert:</strong> Someone bought 100K BTC</p>
+  </div>
+
+  <a href="/index.html" class="back">← Return to Main Page</a>
+
+  <script>
+    const z = Array.from({ length: 7 }, () =>
+      Array.from({ length: 24 }, () => Math.random() * 100)
+    );
+
+    const data = [{
+      z: z,
+      x: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+      y: ['Sun', 'Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon'],
+      type: 'heatmap',
+      colorscale: 'YlOrRd'
+    }];
+
+    const layout = {
+      margin: { t: 30 },
+      paper_bgcolor: '#111',
+      plot_bgcolor: '#111',
+      font: { color: 'white' },
+      xaxis: { title: 'Hour (UTC)' },
+      yaxis: { title: 'Day of Week' }
+    };
+
+    Plotly.newPlot('heatmap', data, layout);
+  </script>
+</body>
+</html>
