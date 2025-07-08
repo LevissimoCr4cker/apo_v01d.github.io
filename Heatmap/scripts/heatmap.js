@@ -4,64 +4,64 @@ async function fetchCandles() {
   const rawData = await res.json();
 
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
   let traces = [];
 
-  rawData.forEach((candle, index) => {
-    const timestamp = candle[0];
-    const open = parseFloat(candle[1]);
-    const high = parseFloat(candle[2]);
-    const low = parseFloat(candle[3]);
-    const close = parseFloat(candle[4]);
+  rawData.forEach(candle => {
+    const [time, open, high, low, close] = [
+      candle[0],
+      parseFloat(candle[1]),
+      parseFloat(candle[2]),
+      parseFloat(candle[3]),
+      parseFloat(candle[4])
+    ];
 
-    const date = new Date(timestamp);
-    const day = date.getUTCDay();
+    const date = new Date(time);
+    const day = date.getUTCDay();  // 0 = Sunday
     const hour = date.getUTCHours();
 
+    const zStart = Math.min(open, close);
+    const height = Math.abs(close - open);
+    const color = close >= open ? 'lime' : 'red';
+
+    // Base quadrada 1x1 e colada
     const x0 = day;
     const y0 = hour;
-    const z0 = Math.min(open, close);
-    const height = Math.abs(close - open);
-    const color = close > open ? 'lime' : 'red';
 
-    const candleWidth = 0.3;
-
-    // Corpo do candle como cubo (8 vértices)
     const cube = {
       type: 'mesh3d',
       x: [
-        x0 - candleWidth, x0 + candleWidth, x0 + candleWidth, x0 - candleWidth,
-        x0 - candleWidth, x0 + candleWidth, x0 + candleWidth, x0 - candleWidth
+        x0,     x0 + 1, x0 + 1, x0,
+        x0,     x0 + 1, x0 + 1, x0
       ],
       y: [
-        y0 - candleWidth, y0 - candleWidth, y0 + candleWidth, y0 + candleWidth,
-        y0 - candleWidth, y0 - candleWidth, y0 + candleWidth, y0 + candleWidth
+        y0,     y0,     y0 + 1, y0 + 1,
+        y0,     y0,     y0 + 1, y0 + 1
       ],
       z: [
-        z0, z0, z0, z0,
-        z0 + height, z0 + height, z0 + height, z0 + height
+        zStart, zStart, zStart, zStart,
+        zStart + height, zStart + height, zStart + height, zStart + height
       ],
-      i: [0, 0, 0, 4, 4, 5, 1, 2, 3, 6, 6, 7],
-      j: [1, 2, 3, 5, 6, 6, 5, 6, 7, 2, 3, 0],
-      k: [2, 3, 0, 6, 7, 7, 0, 3, 0, 7, 0, 1],
+      i: [0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5],
+      j: [1, 2, 3, 2, 6, 3, 7, 0, 4, 5, 6, 6],
+      k: [2, 3, 0, 6, 5, 7, 6, 4, 5, 6, 7, 7],
       opacity: 1,
       color: color,
-      flatshading: true
+      flatshading: true,
+      hoverinfo: 'skip'
     };
 
-    // Pavio como linha vertical
     const wick = {
       type: 'scatter3d',
       mode: 'lines',
-      x: [x0, x0],
-      y: [y0, y0],
+      x: [x0 + 0.5, x0 + 0.5],
+      y: [y0 + 0.5, y0 + 0.5],
       z: [low, high],
       line: {
         color: color,
-        width: 3
+        width: 2
       },
-      showlegend: false,
-      hoverinfo: 'none'
+      hoverinfo: 'none',
+      showlegend: false
     };
 
     traces.push(cube, wick);
@@ -71,7 +71,7 @@ async function fetchCandles() {
     scene: {
       xaxis: { title: 'Day', tickvals: [0,1,2,3,4,5,6], ticktext: days },
       yaxis: { title: 'Hour (UTC)', range: [0, 23] },
-      zaxis: { title: 'Price (USD)' },
+      zaxis: { title: 'BTC Price (USD)', tickformat: ',.0f' },
     },
     margin: { t: 0, l: 0, r: 0, b: 0 },
     paper_bgcolor: 'black',
