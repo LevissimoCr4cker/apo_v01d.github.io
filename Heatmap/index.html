@@ -1,22 +1,37 @@
-<script type="module">
-  import { setupWebSocket } from './scripts/websocket.js';
-  import { plotChart } from './scripts/chart.js';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BTC H1 Forecast</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body { margin: 0; background-color: #111; color: white; }
+    #chart { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="chart"></div>
+  <script type="module">
+    import { setupWebSocket } from './scripts/websocket.js';
+    import { plotChart } from './scripts/chart.js';
 
-  let fixedCandles = [];
+    let fixedCandles = [];
 
-  async function fetchFixed() {
-    const start = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
-    const url = `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=${start}`;
-    const res = await fetch(url);
-    const data = await res.json();
+    async function fetchFixed() {
+      const start = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
+      const url = `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=${start}`;
+      const res = await fetch(url);
+      const data = await res.json();
 
-    const now = new Date();
-    const currentHour = now.getUTCHours();
-    fixedCandles = data.slice(0, currentHour);
-    const current = data[currentHour];
-    plotChart(fixedCandles, current);
-    setupWebSocket(fixedCandles);
-  }
+      const now = new Date();
+      const currentHour = now.getUTCHours();
+      fixedCandles = data.slice(0, currentHour);
+      const current = data[currentHour];
+      plotChart(fixedCandles, current);
+      setupWebSocket(fixedCandles);
+    }
 
-  fetchFixed();
-</script>
+    fetchFixed();
+  </script>
+</body>
+</html>
