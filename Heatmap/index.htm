@@ -2,16 +2,101 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BTC Heatmap 3D</title>
+  <title>BTC Candles Today</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
-    body { margin: 0; background: black; color: white; font-family: sans-serif; }
+    body { margin: 0; background: #111; color: white; font-family: sans-serif; }
     #chart { width: 100vw; height: 100vh; }
   </style>
 </head>
 <body>
   <div id="chart"></div>
-  <script src="scripts/heatmap.js"></script>
+  <script>
+    const symbol = "BTCUSDT";
+
+    function getStartOfDayUTC() {
+      const now = new Date();
+      return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    }
+
+    async function fetchCandles() {
+      const startTime = getStartOfDayUTC();
+      const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&startTime=${startTime}`;
+      const res = await fetch(url);
+      return await res.json();
+    }
+
+    function averageCandle(candles) {
+      const sum = {
+        open: 0, high: 0, low: 0, close: 0
+      };
+      candles.forEach(c => {
+        sum.open += parseFloat(c[1]);
+        sum.high += parseFloat(c[2]);
+        sum.low  += parseFloat(c[3]);
+        sum.close+= parseFloat(c[4]);
+      });
+      const n = candles.length;
+      return [
+        candles[candles.length - 1][0] + 3600000, // next hour timestamp
+        (sum.open / n).toFixed(2),
+        (sum.high / n).toFixed(2),
+        (sum.low / n).toFixed(2),
+        (sum.close / n).toFixed(2),
+      ];
+    }
+
+    async function drawChart() {
+      const raw = await fetchCandles();
+
+      const now = new Date();
+      const currentHour = now.getUTCHours();
+
+      const fixed = raw.slice(0, currentHour); // fully closed candles
+      const current = raw[currentHour] || null;
+
+      const candles = [...fixed];
+
+      if (current) candles.push(current); // add updating candle
+
+      // project remaining candles using rolling average
+      let projected = [...candles];
+      while (projected.length < 24) {
+        const proj = averageCandle(projected);
+        projected.push(proj);
+      }
+
+      const times = projected.map(c => new Date(c[0]));
+      const opens = projected.map(c => parseFloat(c[1]));
+      const highs = projected.map(c => parseFloat(c[2]));
+      const lows  = projected.map(c => parseFloat(c[3]));
+      const closes= projected.map(c => parseFloat(c[4]));
+
+      const trace = {
+        x: times,
+        open: opens,
+        high: highs,
+        low: lows,
+        close: closes,
+        type: 'candlestick',
+        increasing: { line: { color: 'lime' } },
+        decreasing: { line: { color: 'red' } }
+      };
+
+      const layout = {
+        title: "BTC/USDT Candles Today (UTC)",
+        paper_bgcolor: "#111",
+        plot_bgcolor: "#111",
+        font: { color: "#fff" },
+        xaxis: { title: "Hour", rangeslider: { visible: false } },
+        yaxis: { title: "Price (USDT)" },
+      };
+
+      Plotly.newPlot("chart", [trace], layout);
+    }
+
+    drawChart();
+    setInterval(drawChart, 5 * 60 * 1000); // refresh every 5 min
+  </script>
 </body>
 </html>
-
