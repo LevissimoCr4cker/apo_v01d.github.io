@@ -1,121 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>BTC/USDT H1 Live Forecast</title>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <style>
-    body { margin: 0; background-color: #111; color: white; font-family: sans-serif; }
-    #chart { width: 100vw; height: 100vh; }
-  </style>
-</head>
-<body>
-  <div id="chart"></div>
-  <script>
-    const symbol = "BTCUSDT";
-    let fixedCandles = [];
-    let currentCandle = null;
+<script type="module">
+  import { setupWebSocket } from './scripts/websocket.js';
+  import { plotChart } from './scripts/chart.js';
 
-    function getStartOfDayUTC() {
-      const now = new Date();
-      return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-    }
+  let fixedCandles = [];
 
-    async function fetchFixedH1() {
-      const startTime = getStartOfDayUTC();
-      const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&startTime=${startTime}`;
-      const res = await fetch(url);
-      const data = await res.json();
+  async function fetchFixed() {
+    const start = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
+    const url = `https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=${start}`;
+    const res = await fetch(url);
+    const data = await res.json();
 
-      const now = new Date();
-      const currentHour = now.getUTCHours();
+    const now = new Date();
+    const currentHour = now.getUTCHours();
+    fixedCandles = data.slice(0, currentHour);
+    const current = data[currentHour];
+    plotChart(fixedCandles, current);
+    setupWebSocket(fixedCandles);
+  }
 
-      fixedCandles = data.slice(0, currentHour); // fixos
-      currentCandle = data[currentHour];         // candle atual (incompleto)
-    }
-
-    function buildProjectedCandles() {
-      const result = [...fixedCandles, currentCandle];
-
-      while (result.length < 24) {
-        const sum = { o: 0, h: 0, l: 0, c: 0 };
-
-        for (let i = 0; i < result.length; i++) {
-          sum.o += parseFloat(result[i][1]);
-          sum.h += parseFloat(result[i][2]);
-          sum.l += parseFloat(result[i][3]);
-          sum.c += parseFloat(result[i][4]);
-        }
-
-        const n = result.length;
-        const lastTimestamp = result[result.length - 1][0] + 3600000;
-
-        const forecast = [
-          lastTimestamp,
-          (sum.o / n).toFixed(2),
-          (sum.h / n).toFixed(2),
-          (sum.l / n).toFixed(2),
-          (sum.c / n).toFixed(2)
-        ];
-
-        result.push(forecast);
-      }
-
-      return result;
-    }
-
-    function plotChart() {
-      const candles = buildProjectedCandles();
-
-      const times = candles.map(c => new Date(c[0]));
-      const opens  = candles.map(c => parseFloat(c[1]));
-      const highs  = candles.map(c => parseFloat(c[2]));
-      const lows   = candles.map(c => parseFloat(c[3]));
-      const closes = candles.map(c => parseFloat(c[4]));
-
-      const trace = {
-        x: times,
-        open: opens,
-        high: highs,
-        low: lows,
-        close: closes,
-        type: 'candlestick',
-        increasing: { line: { color: 'lime' } },
-        decreasing: { line: { color: 'red' } }
-      };
-
-      const layout = {
-        title: "BTC/USDT H1 • Real-Time + Forecast",
-        xaxis: { rangeslider: { visible: false }, title: "Time (UTC)" },
-        yaxis: { title: "Price (USDT)" },
-        paper_bgcolor: "#111",
-        plot_bgcolor: "#111",
-        font: { color: "#fff" }
-      };
-
-      Plotly.newPlot("chart", [trace], layout);
-    }
-
-    function setupWebSocket() {
-      const socket = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@kline_1h");
-
-      socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        const k = data.k;
-        if (k.x === false) {
-          currentCandle = [
-            k.t, k.o, k.h, k.l, k.c
-          ];
-          plotChart();
-        }
-      };
-    }
-
-    // Start everything
-    fetchFixedH1().then(() => {
-      plotChart();
-      setupWebSocket();
-    });
-  </script>
-</body>
-</html>
+  fetchFixed();
+</script>
