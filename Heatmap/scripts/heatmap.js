@@ -19,27 +19,26 @@ async function fetchCandles() {
     const day = date.getUTCDay();  // 0 = Sunday
     const hour = date.getUTCHours();
 
-    const zStart = Math.min(open, close);
-    const height = Math.abs(close - open);
-    const color = close >= open ? 'lime' : 'red';
-
-    // Base quadrada 1x1 e colada
     const x0 = day;
     const y0 = hour;
+    const z0 = Math.min(open, close);
+    const z1 = Math.max(open, close);
+    const color = close >= open ? 'lime' : 'red';
+    const w = 0.5; // half-width for perfect square
 
     const cube = {
       type: 'mesh3d',
       x: [
-        x0,     x0 + 1, x0 + 1, x0,
-        x0,     x0 + 1, x0 + 1, x0
+        x0 - w, x0 + w, x0 + w, x0 - w, // base
+        x0 - w, x0 + w, x0 + w, x0 - w  // top
       ],
       y: [
-        y0,     y0,     y0 + 1, y0 + 1,
-        y0,     y0,     y0 + 1, y0 + 1
+        y0 - w, y0 - w, y0 + w, y0 + w,
+        y0 - w, y0 - w, y0 + w, y0 + w
       ],
       z: [
-        zStart, zStart, zStart, zStart,
-        zStart + height, zStart + height, zStart + height, zStart + height
+        z0, z0, z0, z0,
+        z1, z1, z1, z1
       ],
       i: [0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5],
       j: [1, 2, 3, 2, 6, 3, 7, 0, 4, 5, 6, 6],
@@ -53,15 +52,15 @@ async function fetchCandles() {
     const wick = {
       type: 'scatter3d',
       mode: 'lines',
-      x: [x0 + 0.5, x0 + 0.5],
-      y: [y0 + 0.5, y0 + 0.5],
+      x: [x0, x0],
+      y: [y0, y0],
       z: [low, high],
       line: {
         color: color,
-        width: 2
+        width: 3
       },
-      hoverinfo: 'none',
-      showlegend: false
+      showlegend: false,
+      hoverinfo: 'none'
     };
 
     traces.push(cube, wick);
@@ -71,11 +70,11 @@ async function fetchCandles() {
     scene: {
       xaxis: { title: 'Day', tickvals: [0,1,2,3,4,5,6], ticktext: days },
       yaxis: { title: 'Hour (UTC)', range: [0, 23] },
-      zaxis: { title: 'BTC Price (USD)', tickformat: ',.0f' },
+      zaxis: { title: 'BTC Price (USD)', tickformat: '.0f' }
     },
     margin: { t: 0, l: 0, r: 0, b: 0 },
     paper_bgcolor: 'black',
-    scene_bgcolor: 'black',
+    scene_bgcolor: 'black'
   };
 
   Plotly.newPlot('chart', traces, layout);
