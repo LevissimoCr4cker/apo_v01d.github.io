@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BTC/USDT H1 • Real-Time + Forecast</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #111;
+      color: white;
+      font-family: sans-serif;
+    }
+    #chart {
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="chart"></div>
+
+  <!-- Modules -->
+  <script type="module">
+    import { plotChart } from './chart.js';
+    import { setupWebSocket } from './websocket.js';
+
+    const symbol = "BTCUSDT";
+
+    function getStartOfDayUTC() {
+      const now = new Date();
+      return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    }
+
+    async function fetchFixedCandles() {
+      const startTime = getStartOfDayUTC();
+      const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&startTime=${startTime}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const now = new Date();
+      const currentHour = now.getUTCHours();
+
+      return data.slice(0, currentHour); // Only fixed (closed) candles
+    }
+
+    fetchFixedCandles().then(fixedCandles => {
+      const now = new Date();
+      const hour = now.getUTCHours();
+      const minute = now.getUTCMinutes();
+
+      if (hour > 0 || minute > 0) {
+        plotChart(fixedCandles, null); // Draw initial chart
+        setupWebSocket(fixedCandles);  // Start updates
+      }
+    });
+  </script>
+</body>
+</html>
