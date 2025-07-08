@@ -30,67 +30,70 @@
       const now = new Date();
       const currentHour = now.getUTCHours();
 
-      fixedCandles = data.slice(0, currentHour); // Fixos
-      currentCandle = data[currentHour];         // Candle atual (incompleto)
+      fixedCandles = data.slice(0, currentHour); // fixos
+      currentCandle = data[currentHour];         // candle atual (incompleto)
     }
 
-    function averageFromList(list) {
-      let o = 0, h = 0, l = 0, c = 0;
-      list.forEach(candle => {
-        o += parseFloat(candle[1]);
-        h += parseFloat(candle[2]);
-        l += parseFloat(candle[3]);
-        c += parseFloat(candle[4]);
-      });
-      const n = list.length;
-      return [
-        list[list.length - 1][0] + 3600000,
-        (o / n).toFixed(2),
-        (h / n).toFixed(2),
-        (l / n).toFixed(2),
-        (c / n).toFixed(2),
-      ];
+    function buildProjectedCandles() {
+      const result = [...fixedCandles, currentCandle];
+
+      while (result.length < 24) {
+        const sum = { o: 0, h: 0, l: 0, c: 0 };
+
+        for (let i = 0; i < result.length; i++) {
+          sum.o += parseFloat(result[i][1]);
+          sum.h += parseFloat(result[i][2]);
+          sum.l += parseFloat(result[i][3]);
+          sum.c += parseFloat(result[i][4]);
+        }
+
+        const n = result.length;
+        const lastTimestamp = result[result.length - 1][0] + 3600000;
+
+        const forecast = [
+          lastTimestamp,
+          (sum.o / n).toFixed(2),
+          (sum.h / n).toFixed(2),
+          (sum.l / n).toFixed(2),
+          (sum.c / n).toFixed(2)
+        ];
+
+        result.push(forecast);
+      }
+
+      return result;
     }
 
-   function buildProjectedCandles() {
-  const result = [...fixedCandles, currentCandle];
+    function plotChart() {
+      const candles = buildProjectedCandles();
 
-  while (result.length < 24) {
-    const sum = { o: 0, h: 0, l: 0, c: 0 };
+      const times = candles.map(c => new Date(c[0]));
+      const opens  = candles.map(c => parseFloat(c[1]));
+      const highs  = candles.map(c => parseFloat(c[2]));
+      const lows   = candles.map(c => parseFloat(c[3]));
+      const closes = candles.map(c => parseFloat(c[4]));
 
-    for (let i = 0; i < result.length; i++) {
-      sum.o += parseFloat(result[i][1]);
-      sum.h += parseFloat(result[i][2]);
-      sum.l += parseFloat(result[i][3]);
-      sum.c += parseFloat(result[i][4]);
-    }
+      const trace = {
+        x: times,
+        open: opens,
+        high: highs,
+        low: lows,
+        close: closes,
+        type: 'candlestick',
+        increasing: { line: { color: 'lime' } },
+        decreasing: { line: { color: 'red' } }
+      };
 
-    const n = result.length;
-    const lastTimestamp = result[result.length - 1][0] + 3600000;
-
-    const forecast = [
-      lastTimestamp,
-      (sum.o / n).toFixed(2),
-      (sum.h / n).toFixed(2),
-      (sum.l / n).toFixed(2),
-      (sum.c / n).toFixed(2)
-    ];
-
-    result.push(forecast);
-  }
-
-  return result;
-}
-
-
-      Plotly.newPlot('chart', [trace], {
+      const layout = {
         title: "BTC/USDT H1 • Real-Time + Forecast",
-        xaxis: { rangeslider: { visible: false } },
+        xaxis: { rangeslider: { visible: false }, title: "Time (UTC)" },
         yaxis: { title: "Price (USDT)" },
         paper_bgcolor: "#111",
         plot_bgcolor: "#111",
         font: { color: "#fff" }
-      });
+      };
+
+      Plotly.newPlot("chart", [trace], layout);
     }
 
     function setupWebSocket() {
@@ -108,7 +111,7 @@
       };
     }
 
-    // Inicialização
+    // Start everything
     fetchFixedH1().then(() => {
       plotChart();
       setupWebSocket();
