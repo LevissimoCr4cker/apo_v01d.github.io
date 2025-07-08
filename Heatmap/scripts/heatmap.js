@@ -1,50 +1,75 @@
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const hours = [...Array(24).keys()];
-const traces = [];
+async function fetchDataAndPlot() {
+  const url = "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=1719705600000&endTime=1720310400000";
 
-function getColorFromPrice(price) {
-  const ratio = (price - 56000) / (64000 - 56000); // normalize
-  const red = Math.round(ratio * 255);
-  const blue = 255 - red;
-  return `rgb(${red}, 50, ${blue})`;
-}
+  const res = await fetch(url);
+  const candles = await res.json();
 
-for (let d = 0; d < 7; d++) {
-  for (let h = 0; h < 24; h++) {
-    const price = 56000 + Math.random() * 8000;
-    const x0 = d;
-    const y0 = h;
-    const z0 = 0;
-    const z1 = price;
-    const w = 0.45;
+  const prices = Array.from({ length: 7 }, () => Array(24).fill(null));
+  let minPrice = Infinity;
+  let maxPrice = -Infinity;
 
-    const cube = {
-      type: 'mesh3d',
-      x: [x0 - w, x0 + w, x0 + w, x0 - w, x0 - w, x0 + w, x0 + w, x0 - w],
-      y: [y0 - w, y0 - w, y0 + w, y0 + w, y0 - w, y0 - w, y0 + w, y0 + w],
-      z: [z0, z0, z0, z0, z1, z1, z1, z1],
-      i: [0, 0, 0, 4, 4, 5, 1, 2, 3, 6, 6, 7],
-      j: [1, 2, 3, 5, 6, 6, 5, 6, 7, 2, 3, 0],
-      k: [2, 3, 0, 6, 7, 7, 0, 3, 0, 7, 0, 1],
-      opacity: 1,
-      color: getColorFromPrice(price),
-      flatshading: true,
-      hoverinfo: 'skip'
-    };
+  candles.forEach(c => {
+    const time = c[0];
+    const close = parseFloat(c[4]);
+    const date = new Date(time);
+    const day = date.getUTCDay();       // 0 = Sunday
+    const hour = date.getUTCHours();    // 0–23
 
-    traces.push(cube);
+    prices[day][hour] = close;
+    if (close < minPrice) minPrice = close;
+    if (close > maxPrice) maxPrice = close;
+  });
+
+  const traces = [];
+  const barWidth = 0.48;
+
+  function getColor(price) {
+    const ratio = (price - minPrice) / (maxPrice - minPrice);
+    const red = Math.round(ratio * 255);
+    const blue = 255 - red;
+    return `rgb(${red}, 50, ${blue})`;
   }
+
+  for (let day = 0; day < 7; day++) {
+    for (let hour = 0; hour < 24; hour++) {
+      const price = prices[day][hour];
+      if (price === null) continue;
+
+      const x0 = day;
+      const y0 = hour;
+      const z0 = 0;
+      const z1 = price;
+
+      const cube = {
+        type: 'mesh3d',
+        x: [x0, x0+1, x0+1, x0, x0, x0+1, x0+1, x0],
+        y: [y0, y0, y0+1, y0+1, y0, y0, y0+1, y0+1],
+        z: [z0, z0, z0, z0, z1, z1, z1, z1],
+        i: [0,1,2,3,4,5,6,7,0,1,5,4],
+        j: [1,2,3,0,5,6,7,4,4,5,6,7],
+        k: [2,3,0,1,6,7,4,5,1,2,7,6],
+        opacity: 1,
+        color: getColor(price),
+        flatshading: true,
+        hoverinfo: 'skip'
+      };
+
+      traces.push(cube);
+    }
+  }
+
+  const layout = {
+    scene: {
+      xaxis: { title: 'Day', tickvals: [0,1,2,3,4,5,6], ticktext: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] },
+      yaxis: { title: 'Hour (UTC)', range: [0, 24] },
+      zaxis: { title: 'BTC Price (USD)', range: [minPrice, maxPrice] }
+    },
+    paper_bgcolor: 'black',
+    scene_bgcolor: 'black',
+    margin: { t: 0, l: 0, r: 0, b: 0 }
+  };
+
+  Plotly.newPlot('chart', traces, layout);
 }
 
-const layout = {
-  scene: {
-    xaxis: { title: 'Day', tickvals: [0,1,2,3,4,5,6], ticktext: days },
-    yaxis: { title: 'Hour (UTC)', range: [0, 24] },
-    zaxis: { title: 'BTC Price (USD)', range: [55000, 65000] }
-  },
-  paper_bgcolor: 'black',
-  scene_bgcolor: 'black',
-  margin: { t: 0, l: 0, r: 0, b: 0 }
-};
-
-Plotly.newPlot('chart', traces, layout);
+fetchDataAndPlot();
