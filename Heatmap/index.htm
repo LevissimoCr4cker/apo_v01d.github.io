@@ -52,32 +52,36 @@
       ];
     }
 
-    function buildProjectedCandles() {
-      const base = [...fixedCandles, currentCandle];
-      const result = [...base];
+   function buildProjectedCandles() {
+  const result = [...fixedCandles, currentCandle];
 
-      while (result.length < 24) {
-        const avg = averageFromList(result);
-        result.push(avg);
-      }
-      return result;
+  while (result.length < 24) {
+    const sum = { o: 0, h: 0, l: 0, c: 0 };
+
+    for (let i = 0; i < result.length; i++) {
+      sum.o += parseFloat(result[i][1]);
+      sum.h += parseFloat(result[i][2]);
+      sum.l += parseFloat(result[i][3]);
+      sum.c += parseFloat(result[i][4]);
     }
 
-    function plotChart() {
-      const projected = buildProjectedCandles();
+    const n = result.length;
+    const lastTimestamp = result[result.length - 1][0] + 3600000;
 
-      const x = projected.map(c => new Date(c[0]));
-      const open = projected.map(c => parseFloat(c[1]));
-      const high = projected.map(c => parseFloat(c[2]));
-      const low  = projected.map(c => parseFloat(c[3]));
-      const close= projected.map(c => parseFloat(c[4]));
+    const forecast = [
+      lastTimestamp,
+      (sum.o / n).toFixed(2),
+      (sum.h / n).toFixed(2),
+      (sum.l / n).toFixed(2),
+      (sum.c / n).toFixed(2)
+    ];
 
-      const trace = {
-        x, open, high, low, close,
-        type: 'candlestick',
-        increasing: { line: { color: 'lime' } },
-        decreasing: { line: { color: 'red' } }
-      };
+    result.push(forecast);
+  }
+
+  return result;
+}
+
 
       Plotly.newPlot('chart', [trace], {
         title: "BTC/USDT H1 • Real-Time + Forecast",
