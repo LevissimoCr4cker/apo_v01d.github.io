@@ -12,18 +12,15 @@ export function plotChart(fixedCandles, currentCandle) {
   const trace = {
     x, open, high, low, close,
     type: 'candlestick',
-    increasing: { line: { color: 'lime' } },
+    increasing: { line: { color: 'green' } },
     decreasing: { line: { color: 'red' } }
   };
 
-  const layout = {
-    title: "BTC/USDT H1 • Real-Time + Forecast",
+  Plotly.newPlot('chart', [trace], {
+    title: "BTC/USDT H1 Forecast",
+    paper_bgcolor: "#111", plot_bgcolor: "#111",
+    font: { color: "#fff" },
     xaxis: { rangeslider: { visible: false } },
-    yaxis: { title: "Price" },
-    paper_bgcolor: "#111",
-    plot_bgcolor: "#111",
-    font: { color: "#fff" }
-  };
-
-  Plotly.newPlot("chart", [trace], layout);
+    yaxis: { title: "Price (USDT)" }
+  });
 }
