@@ -2,96 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>BTC 3D Weekly Heatmap</title>
+  <title>BTC Weekly 3D Candles</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
-    body { margin: 0; background-color: #111; color: #fff; font-family: Arial, sans-serif; }
+    body { margin: 0; background-color: #111; color: #fff; }
     #chart { width: 100vw; height: 100vh; }
   </style>
 </head>
 <body>
-  <div id="chart"></div>
+<div id="chart"></div>
 
-  <script>
-    const url = 'wss://stream.binance.com:9443/ws/btcusdt@kline_1h';
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    let dataMatrix = Array.from({ length: 7 }, () => Array(24).fill(null));
+<script>
+const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let dataMatrix = Array.from({length:7}, () => Array(24).fill(0));
 
-    // Initialize chart
-    Plotly.newPlot('chart', [{
-      z: dataMatrix,
-      type: 'surface',
-      colorscale: 'Jet',
-      showscale: false,
-      contours: { z: { show: false } },
-    }], {
-      title: 'BTC/USD Hourly 3D Heatmap',
-      scene: {
-        xaxis: { title: 'Hours', nticks: 24 },
-        yaxis: { title: 'Days', tickvals: [0,1,2,3,4,5,6], ticktext: days },
-        zaxis: { title: 'Price' },
-        camera: { eye: { x: 1.5, y: 1.5, z: 0.5 } },
-      },
-      autosize: true,
-    });
+function initChart() {
+  const data = [{ 
+    z: dataMatrix,
+    type: 'surface',
+    colorscale: 'Jet',
+    showscale: false,
+    contours: { z: { show:false }},
+  }];
+  
+  const layout = {
+    title: 'BTC/USD Hourly Candles (Weekly)',
+    scene: {
+      xaxis:{title:'Hour', nticks:24},
+      yaxis:{title:'Day', tickvals:[0,1,2,3,4,5,6], ticktext:days},
+      zaxis:{title:'Price'},
+    },
+    autosize:true,
+  };
 
-    // Fetch initial historical candles (since Sunday 00:00 UTC)
-    async function fetchInitialData() {
-      const now = new Date();
-      const sundayMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - now.getUTCDay()));
-      const startTime = sundayMidnight.getTime();
+  Plotly.newPlot('chart',data,layout);
+}
 
-      const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=${startTime}`);
-      const candles = await response.json();
+async function fetchInitialData(){
+  const now = new Date();
+  const lastSunday = new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()-now.getUTCDay()));
+  const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=${lastSunday.getTime()}`);
+  const candles = await response.json();
 
-      candles.forEach(candle => {
-        const date = new Date(candle[0]);
-        const day = date.getUTCDay();
-        const hour = date.getUTCHours();
-        dataMatrix[day][hour] = parseFloat(candle[4]); // Closing price
-      });
+  candles.forEach(c=>{
+    let date=new Date(c[0]);
+    dataMatrix[date.getUTCDay()][date.getUTCHours()]=parseFloat(c[4]);
+  });
 
-      updateChart();
+  updateForecast();
+  Plotly.react('chart',[{z:dataMatrix,type:'surface',colorscale:'Jet',showscale:false}],{scene:{xaxis:{title:'Hour'},yaxis:{title:'Day',tickvals:[0,1,2,3,4,5,6],ticktext:days},zaxis:{title:'Price'}}});
+}
+
+function updateForecast(){
+  let knownPrices=dataMatrix.flat().filter(v=>v);
+  let mean=knownPrices.reduce((a,b)=>a+b,0)/knownPrices.length;
+
+  let now=new Date(), d=now.getUTCDay(), h=now.getUTCHours();
+  for(let day=d; day<7; day++){
+    for(let hour=(day===d?h+1:0); hour<24; hour++){
+      dataMatrix[day][hour]=parseFloat(mean.toFixed(2));
+      mean=(mean+dataMatrix.flat().reduce((a,b)=>a+b,0)/dataMatrix.flat().length)/2;
     }
+  }
+}
 
-    // WebSocket for live updates
-    const ws = new WebSocket(url);
+const ws=new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1h');
+ws.onmessage=(e)=>{
+  const kline=JSON.parse(e.data).k;
+  const date=new Date(kline.t);
+  dataMatrix[date.getUTCDay()][date.getUTCHours()]=parseFloat(kline.c);
+  updateForecast();
+  Plotly.react('chart',[{z:dataMatrix,type:'surface',colorscale:'Jet',showscale:false}],{scene:{xaxis:{title:'Hour'},yaxis:{title:'Day',tickvals:[0,1,2,3,4,5,6],ticktext:days},zaxis:{title:'Price'}}});
+};
 
-    ws.onmessage = (event) => {
-      const k = JSON.parse(event.data).k;
-      const date = new Date(k.t);
-      const day = date.getUTCDay();
-      const hour = date.getUTCHours();
-      const price = parseFloat(k.c);
-
-      dataMatrix[day][hour] = price;
-
-      recalculateForecast(day, hour);
-      updateChart();
-    };
-
-    function recalculateForecast(day, hour) {
-      let prices = dataMatrix.flat().filter(v => v !== null);
-      let mean = prices.reduce((a,b) => a+b, 0) / prices.length;
-
-      let currentDay = day;
-      let currentHour = hour + 1;
-      while(currentDay < 7) {
-        while(currentHour < 24) {
-          mean = (mean + dataMatrix.flat().filter(v => v !== null).reduce((a,b) => a+b, 0) / prices.length) / 2;
-          dataMatrix[currentDay][currentHour] = parseFloat(mean.toFixed(2));
-          currentHour++;
-        }
-        currentDay++;
-        currentHour = 0;
-      }
-    }
-
-    function updateChart() {
-      Plotly.update('chart', { z: [dataMatrix] });
-    }
-
-    fetchInitialData();
-  </script>
+initChart();
+fetchInitialData();
+</script>
 </body>
 </html>
