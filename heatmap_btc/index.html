@@ -2,81 +2,89 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>BTC Weekly 3D Candles</title>
+  <title>BTC Weekly 3D Candlesticks</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
-    body { margin: 0; background-color: #111; color: #fff; }
-    #chart { width: 100vw; height: 100vh; }
+    body { margin:0; background:#111; color:#fff; overflow:hidden; }
+    #chart { width:100vw; height:100vh; }
   </style>
 </head>
 <body>
-<div id="chart"></div>
+  <div id="chart"></div>
+  <script>
+    const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    let bodyMatrix=Array.from({length:7},()=>Array(24).fill(0));
+    let highMatrix=Array.from({length:7},()=>Array(24).fill(0));
+    let lowMatrix=Array.from({length:7},()=>Array(24).fill(0));
 
-<script>
-const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-let dataMatrix = Array.from({length:7}, () => Array(24).fill(0));
-
-function initChart() {
-  const data = [{ 
-    z: dataMatrix,
-    type: 'surface',
-    colorscale: 'Jet',
-    showscale: false,
-    contours: { z: { show:false }},
-  }];
-  
-  const layout = {
-    title: 'BTC/USD Hourly Candles (Weekly)',
-    scene: {
-      xaxis:{title:'Hour', nticks:24},
-      yaxis:{title:'Day', tickvals:[0,1,2,3,4,5,6], ticktext:days},
-      zaxis:{title:'Price'},
-    },
-    autosize:true,
-  };
-
-  Plotly.newPlot('chart',data,layout);
-}
-
-async function fetchInitialData(){
-  const now = new Date();
-  const lastSunday = new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()-now.getUTCDay()));
-  const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=${lastSunday.getTime()}`);
-  const candles = await response.json();
-
-  candles.forEach(c=>{
-    let date=new Date(c[0]);
-    dataMatrix[date.getUTCDay()][date.getUTCHours()]=parseFloat(c[4]);
-  });
-
-  updateForecast();
-  Plotly.react('chart',[{z:dataMatrix,type:'surface',colorscale:'Jet',showscale:false}],{scene:{xaxis:{title:'Hour'},yaxis:{title:'Day',tickvals:[0,1,2,3,4,5,6],ticktext:days},zaxis:{title:'Price'}}});
-}
-
-function updateForecast(){
-  let knownPrices=dataMatrix.flat().filter(v=>v);
-  let mean=knownPrices.reduce((a,b)=>a+b,0)/knownPrices.length;
-
-  let now=new Date(), d=now.getUTCDay(), h=now.getUTCHours();
-  for(let day=d; day<7; day++){
-    for(let hour=(day===d?h+1:0); hour<24; hour++){
-      dataMatrix[day][hour]=parseFloat(mean.toFixed(2));
-      mean=(mean+dataMatrix.flat().reduce((a,b)=>a+b,0)/dataMatrix.flat().length)/2;
+    async function fetchInitialData(){
+      const now=new Date();
+      const sunMidnight=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()-now.getUTCDay()));
+      const res=await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=${sunMidnight.getTime()}`);
+      const candles=await res.json();
+      candles.forEach(c=>{
+        const date=new Date(c[0]);
+        const d=date.getUTCDay(),h=date.getUTCHours();
+        bodyMatrix[d][h]=parseFloat(c[4]); // close
+        highMatrix[d][h]=parseFloat(c[2]); // high
+        lowMatrix[d][h]=parseFloat(c[3]);  // low
+      });
+      updateForecast();
+      plotChart();
     }
-  }
-}
 
-const ws=new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1h');
-ws.onmessage=(e)=>{
-  const kline=JSON.parse(e.data).k;
-  const date=new Date(kline.t);
-  dataMatrix[date.getUTCDay()][date.getUTCHours()]=parseFloat(kline.c);
-  updateForecast();
-  Plotly.react('chart',[{z:dataMatrix,type:'surface',colorscale:'Jet',showscale:false}],{scene:{xaxis:{title:'Hour'},yaxis:{title:'Day',tickvals:[0,1,2,3,4,5,6],ticktext:days},zaxis:{title:'Price'}}});
-};
+    function updateForecast(){
+      let prices=bodyMatrix.flat().filter(v=>v>0);
+      let mean=prices.reduce((a,b)=>a+b,0)/prices.length;
+      const now=new Date(),day=now.getUTCDay(),hour=now.getUTCHours();
 
-initChart();
-fetchInitialData();
-</script>
+      for(let d=day; d<7; d++){
+        for(let h=(d==day?hour+1:0); h<24; h++){
+          mean=(mean+prices.reduce((a,b)=>a+b,0)/prices.length)/2;
+          bodyMatrix[d][h]=parseFloat(mean.toFixed(2));
+          highMatrix[d][h]=parseFloat((mean+(Math.random()*100)).toFixed(2));
+          lowMatrix[d][h]=parseFloat((mean-(Math.random()*100)).toFixed(2));
+        }
+      }
+    }
+
+    function plotChart(){
+      let bars={x:[],y:[],z:[],type:'bar3d',colorscale:'Jet',opacity:0.8};
+      let lines={x:[],y:[],z:[],mode:'lines',type:'scatter3d',line:{color:'#fff',width:2}};
+
+      for(let d=0; d<7; d++){
+        for(let h=0; h<24; h++){
+          bars.x.push(h); bars.y.push(d); bars.z.push(bodyMatrix[d][h]);
+
+          lines.x.push(h,h,null);
+          lines.y.push(d,d,null);
+          lines.z.push(lowMatrix[d][h],highMatrix[d][h],null);
+        }
+      }
+
+      Plotly.newPlot('chart',[bars,lines],{
+        scene:{
+          xaxis:{title:'Hour',dtick:1},
+          yaxis:{title:'Day',tickvals:[0,1,2,3,4,5,6],ticktext:days,dtick:1},
+          zaxis:{title:'BTC Price'},
+          aspectratio:{x:2,y:1,z:1},
+          camera:{eye:{x:1.5,y:1.5,z:0.8}}
+        },
+        margin:{t:40,b:20,l:20,r:20},
+      });
+    }
+
+    const ws=new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1h');
+    ws.onmessage=(e)=>{
+      const k=JSON.parse(e.data).k,date=new Date(k.t),d=date.getUTCDay(),h=date.getUTCHours();
+      bodyMatrix[d][h]=parseFloat(k.c);
+      highMatrix[d][h]=parseFloat(k.h);
+      lowMatrix[d][h]=parseFloat(k.l);
+      updateForecast();
+      plotChart();
+    };
+
+    fetchInitialData();
+  </script>
 </body>
 </html>
