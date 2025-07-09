@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>BTC Weekly 3D Candlesticks</title>
+  <title>BTC 3D Candlestick Chart</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
     body { margin:0; background:#111; color:#fff; overflow:hidden; }
@@ -13,9 +13,7 @@
   <div id="chart"></div>
   <script>
     const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    let bodyMatrix=Array.from({length:7},()=>Array(24).fill(0));
-    let highMatrix=Array.from({length:7},()=>Array(24).fill(0));
-    let lowMatrix=Array.from({length:7},()=>Array(24).fill(0));
+    let candleMatrix=Array.from({length:7},()=>Array(24).fill({open:0,close:0,high:0,low:0}));
 
     async function fetchInitialData(){
       const now=new Date();
@@ -25,62 +23,46 @@
       candles.forEach(c=>{
         const date=new Date(c[0]);
         const d=date.getUTCDay(),h=date.getUTCHours();
-        bodyMatrix[d][h]=parseFloat(c[4]); // close
-        highMatrix[d][h]=parseFloat(c[2]); // high
-        lowMatrix[d][h]=parseFloat(c[3]);  // low
+        candleMatrix[d][h]={open:+c[1],high:+c[2],low:+c[3],close:+c[4]};
       });
-      updateForecast();
       plotChart();
     }
 
-    function updateForecast(){
-      let prices=bodyMatrix.flat().filter(v=>v>0);
-      let mean=prices.reduce((a,b)=>a+b,0)/prices.length;
-      const now=new Date(),day=now.getUTCDay(),hour=now.getUTCHours();
-
-      for(let d=day; d<7; d++){
-        for(let h=(d==day?hour+1:0); h<24; h++){
-          mean=(mean+prices.reduce((a,b)=>a+b,0)/prices.length)/2;
-          bodyMatrix[d][h]=parseFloat(mean.toFixed(2));
-          highMatrix[d][h]=parseFloat((mean+(Math.random()*100)).toFixed(2));
-          lowMatrix[d][h]=parseFloat((mean-(Math.random()*100)).toFixed(2));
-        }
-      }
-    }
-
     function plotChart(){
-      let bars={x:[],y:[],z:[],type:'bar3d',colorscale:'Jet',opacity:0.8};
-      let lines={x:[],y:[],z:[],mode:'lines',type:'scatter3d',line:{color:'#fff',width:2}};
+      const bars={x:[],y:[],z:[],type:'bar3d',colorscale:'Jet',opacity:0.9};
+      const wicks={x:[],y:[],z:[],mode:'lines',type:'scatter3d',line:{color:'#fff',width:2}};
 
       for(let d=0; d<7; d++){
         for(let h=0; h<24; h++){
-          bars.x.push(h); bars.y.push(d); bars.z.push(bodyMatrix[d][h]);
+          const c=candleMatrix[d][h];
+          const body=Math.abs(c.close-c.open);
+          const base=Math.min(c.open,c.close);
 
-          lines.x.push(h,h,null);
-          lines.y.push(d,d,null);
-          lines.z.push(lowMatrix[d][h],highMatrix[d][h],null);
+          bars.x.push(h);
+          bars.y.push(d);
+          bars.z.push(body);
+
+          wicks.x.push(h,h,null);
+          wicks.y.push(d,d,null);
+          wicks.z.push(c.low,c.high,null);
         }
       }
 
-      Plotly.newPlot('chart',[bars,lines],{
+      Plotly.newPlot('chart',[bars,wicks],{
         scene:{
           xaxis:{title:'Hour',dtick:1},
           yaxis:{title:'Day',tickvals:[0,1,2,3,4,5,6],ticktext:days,dtick:1},
-          zaxis:{title:'BTC Price'},
-          aspectratio:{x:2,y:1,z:1},
-          camera:{eye:{x:1.5,y:1.5,z:0.8}}
+          zaxis:{title:'Price Range'},
+          camera:{eye:{x:1.6,y:1.6,z:0.6}}
         },
-        margin:{t:40,b:20,l:20,r:20},
+        margin:{t:40,b:10,l:10,r:10},
       });
     }
 
     const ws=new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1h');
     ws.onmessage=(e)=>{
       const k=JSON.parse(e.data).k,date=new Date(k.t),d=date.getUTCDay(),h=date.getUTCHours();
-      bodyMatrix[d][h]=parseFloat(k.c);
-      highMatrix[d][h]=parseFloat(k.h);
-      lowMatrix[d][h]=parseFloat(k.l);
-      updateForecast();
+      candleMatrix[d][h]={open:+k.o,high:+k.h,low:+k.l,close:+k.c};
       plotChart();
     };
 
