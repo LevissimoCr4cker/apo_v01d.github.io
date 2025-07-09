@@ -21,7 +21,22 @@ const light = new THREE.PointLight(0xffffff, 1);
 light.position.set(50, 50, 50);
 scene.add(light);
 
+const gridHelper = new THREE.GridHelper(50, 50);
+scene.add(gridHelper);
+
 const grid = Array.from({ length: 7 }, () => Array(24).fill(null));
+
+function clearScene() {
+  for (let i = scene.children.length - 1; i >= 0; i--) {
+    const obj = scene.children[i];
+    if (obj.type === 'Mesh' || obj.type === 'Line') {
+      scene.remove(obj);
+    }
+  }
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  scene.add(gridHelper);
+}
 
 function addCandle(x, y, open, close, high, low, color=0x00ff00) {
   const bodyHeight = Math.abs(close - open);
@@ -52,28 +67,31 @@ async function fetchInitialData() {
     const day = date.getUTCDay(), hour = date.getUTCHours();
     const open = +c[1], high = +c[2], low = +c[3], close = +c[4];
     grid[day][hour] = { open, high, low, close };
-    const color = close >= open ? 0x00ff00 : 0xff0000;
-    addCandle(hour, day, open/1000, close/1000, high/1000, low/1000, color);
   });
 
   updateForecast();
 }
 
 function updateForecast() {
+  clearScene();
   const prices = grid.flat().filter(c => c).map(c => c.close);
   let mean = prices.reduce((a, b) => a + b, 0) / prices.length;
   const now = new Date(), d = now.getUTCDay(), h = now.getUTCHours();
 
-  for (let day = d; day < 7; day++) {
-    for (let hour = (day === d ? h + 1 : 0); hour < 24; hour++) {
-      const open = mean;
-      const close = mean + (Math.random() - 0.5) * 200;
-      const high = Math.max(open, close) + Math.random() * 100;
-      const low = Math.min(open, close) - Math.random() * 100;
-      grid[day][hour] = { open, high, low, close };
-      const color = close >= open ? 0x00ff00 : 0xff0000;
-      addCandle(hour, day, open/1000, close/1000, high/1000, low/1000, color);
-      mean = (mean + close) / 2;
+  for (let day = 0; day < 7; day++) {
+    for (let hour = 0; hour < 24; hour++) {
+      let candle = grid[day][hour];
+      if (!candle) {
+        const open = mean;
+        const close = mean + (Math.random() - 0.5) * 200;
+        const high = Math.max(open, close) + Math.random() * 100;
+        const low = Math.min(open, close) - Math.random() * 100;
+        candle = { open, high, low, close };
+        grid[day][hour] = candle;
+        mean = (mean + close) / 2;
+      }
+      const color = candle.close >= candle.open ? 0x00ff00 : 0xff0000;
+      addCandle(hour, day, candle.open / 100, candle.close / 100, candle.high / 100, candle.low / 100, color);
     }
   }
 }
@@ -85,12 +103,10 @@ ws.onmessage = (e) => {
   const d = date.getUTCDay(), h = date.getUTCHours();
   const open = +k.o, high = +k.h, low = +k.l, close = +k.c;
   grid[d][h] = { open, high, low, close };
-  const color = close >= open ? 0x00ff00 : 0xff0000;
-  addCandle(h, d, open/1000, close/1000, high/1000, low/1000, color);
   updateForecast();
 };
 
-camera.position.set(20, 15, 40);
+camera.position.set(20, 30, 70);
 controls.update();
 
 function animate() {
