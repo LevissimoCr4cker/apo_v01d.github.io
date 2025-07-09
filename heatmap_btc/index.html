@@ -1,59 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>BTC/USDT H1 • Real-Time + Forecast</title>
+  <meta charset="UTF-8">
+  <title>BTC 3D Weekly Heatmap</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      background-color: #111;
-      color: white;
-      font-family: sans-serif;
-    }
-    #chart {
-      width: 100vw;
-      height: 100vh;
-    }
+    body { margin: 0; background-color: #111; color: #fff; font-family: Arial, sans-serif; }
+    #chart { width: 100vw; height: 100vh; }
   </style>
 </head>
 <body>
   <div id="chart"></div>
 
-  <!-- Modules -->
-  <script type="module">
-    import { plotChart } from './chart.js';
-    import { setupWebSocket } from './websocket.js';
+  <script>
+    const url = 'wss://stream.binance.com:9443/ws/btcusdt@kline_1h';
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    let dataMatrix = Array.from({ length: 7 }, () => Array(24).fill(null));
 
-    const symbol = "BTCUSDT";
-
-    function getStartOfDayUTC() {
-      const now = new Date();
-      return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-    }
-
-    async function fetchFixedCandles() {
-      const startTime = getStartOfDayUTC();
-      const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&startTime=${startTime}`;
-      const res = await fetch(url);
-      const data = await res.json();
-
-      const now = new Date();
-      const currentHour = now.getUTCHours();
-
-      return data.slice(0, currentHour); // Only fixed (closed) candles
-    }
-
-    fetchFixedCandles().then(fixedCandles => {
-      const now = new Date();
-      const hour = now.getUTCHours();
-      const minute = now.getUTCMinutes();
-
-      if (hour > 0 || minute > 0) {
-        plotChart(fixedCandles, null); // Draw initial chart
-        setupWebSocket(fixedCandles);  // Start updates
-      }
+    // Initialize chart
+    Plotly.newPlot('chart', [{
+      z: dataMatrix,
+      type: 'surface',
+      colorscale: 'Jet',
+      showscale: false,
+      contours: { z: { show: false } },
+    }], {
+      title: 'BTC/USD Hourly 3D Heatmap',
+      scene: {
+        xaxis: { title: 'Hours', nticks: 24 },
+        yaxis: { title: 'Days', tickvals: [0,1,2,3,4,5,6], ticktext: days },
+        zaxis: { title: 'Price' },
+        camera: { eye: { x: 1.5, y: 1.5, z: 0.5 } },
+      },
+      autosize: true,
     });
+
+    // Fetch initial historical candles (since Sunday 00:00 UTC)
+    async function fetchInitialData() {
+      const now = new Date();
+      const sundayMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - now.getUTCDay()));
+      const startTime = sundayMidnight.getTime();
+
+      const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=${startTime}`);
+      const candles = await response.json();
+
+      candles.forEach(candle => {
+        const date = new Date(candle[0]);
+        const day = date.getUTCDay();
+        const hour = date.getUTCHours();
+        dataMatrix[day][hour] = parseFloat(candle[4]); // Closing price
+      });
+
+      updateChart();
+    }
+
+    // WebSocket for live updates
+    const ws = new WebSocket(url);
+
+    ws.onmessage = (event) => {
+      const k = JSON.parse(event.data).k;
+      const date = new Date(k.t);
+      const day = date.getUTCDay();
+      const hour = date.getUTCHours();
+      const price = parseFloat(k.c);
+
+      dataMatrix[day][hour] = price;
+
+      recalculateForecast(day, hour);
+      updateChart();
+    };
+
+    function recalculateForecast(day, hour) {
+      let prices = dataMatrix.flat().filter(v => v !== null);
+      let mean = prices.reduce((a,b) => a+b, 0) / prices.length;
+
+      let currentDay = day;
+      let currentHour = hour + 1;
+      while(currentDay < 7) {
+        while(currentHour < 24) {
+          mean = (mean + dataMatrix.flat().filter(v => v !== null).reduce((a,b) => a+b, 0) / prices.length) / 2;
+          dataMatrix[currentDay][currentHour] = parseFloat(mean.toFixed(2));
+          currentHour++;
+        }
+        currentDay++;
+        currentHour = 0;
+      }
+    }
+
+    function updateChart() {
+      Plotly.update('chart', { z: [dataMatrix] });
+    }
+
+    fetchInitialData();
   </script>
 </body>
 </html>
