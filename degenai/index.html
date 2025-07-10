@@ -18,23 +18,15 @@
     header {
       display: flex;
       align-items: center;
-      padding: 1rem;
+      padding: 0.5rem 1rem;
       background-color: #111;
       color: white;
     }
 
     #logo {
       font-weight: bold;
-      font-size: 1.2rem;
-    }
-
-    #return {
-      margin-left: auto;
-      background: transparent;
-      border: 1px solid white;
-      padding: 0.3rem 0.8rem;
-      color: white;
-      cursor: pointer;
+      font-size: 0.9rem;
+      opacity: 0.4;
     }
 
     main {
@@ -80,7 +72,16 @@
       cursor: pointer;
     }
 
-    #pin-board, #learning-updates {
+    #pin-board {
+      padding: 1rem;
+      border-top: 1px solid #444;
+      background: #1a1a1a;
+      min-height: 100px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+    }
+
+    #learning-updates {
       padding: 1rem;
       border-top: 1px solid #444;
       background: #1a1a1a;
@@ -94,6 +95,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      position: relative;
     }
 
     .circle-box {
@@ -110,14 +112,43 @@
       margin-bottom: 1rem;
       background-color: #111;
       color: #f0f0f0;
+      position: relative;
+    }
+
+    .circle-label {
+      position: absolute;
+      right: 1rem;
+      top: 0.5rem;
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+
+    .brain-label {
+      position: absolute;
+      right: 1rem;
+      bottom: 4.5rem;
+      font-size: 0.75rem;
+      color: #aaa;
     }
 
     #brain-map {
       position: absolute;
-      bottom: 1rem;
+      bottom: 2rem;
       right: 1rem;
       width: 100px;
       opacity: 0.4;
+    }
+
+    #return {
+      position: fixed;
+      bottom: 0.5rem;
+      right: 1rem;
+      background: transparent;
+      border: 1px solid white;
+      padding: 0.3rem 0.8rem;
+      color: white;
+      cursor: pointer;
+      font-size: 0.8rem;
     }
 
     @media (max-width: 768px) {
@@ -133,7 +164,6 @@
 <body>
   <header>
     <div id="logo">apo_v01d</div>
-    <button id="return">← Main Page</button>
   </header>
   <main>
     <section id="chat-section">
@@ -152,11 +182,19 @@
       </div>
     </section>
     <aside id="circle-visual">
-      <div class="circle-box">Visual Thinking</div>
-      <div class="circle-box">Brain Activity Map</div>
+      <div class="circle-box">
+        Visual Thinking
+        <div class="circle-label">conscience</div>
+      </div>
+      <div class="circle-box">
+        Brain Activity Map
+        <div class="circle-label">mood</div>
+      </div>
     </aside>
   </main>
+  <div class="brain-label">iq / activity</div>
   <img id="brain-map" src="/images/brain.png" alt="Brain Area Map" />
+  <button id="return">← Main Page</button>
   <script>
     const chatbox = document.getElementById('chatbox');
     const messageInput = document.getElementById('message');
