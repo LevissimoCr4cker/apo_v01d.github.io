@@ -6,26 +6,37 @@
   <title>VOID-9 :: Caged Intelligence</title>
   <style>
     body {
-      background-color: #333;
+      background-color: #444;
       color: #eee;
       font-family: monospace;
       padding: 20px;
     }
-    #chatbox {
+    #chatbox, #codeboard, #imageboard {
       width: 100%;
-      height: 400px;
-      background: #000;
+      background: #111;
       padding: 10px;
-      overflow-y: scroll;
-      border: 1px solid #444;
+      overflow-y: auto;
+      border: 1px solid #555;
       margin-bottom: 10px;
     }
-    input[type="text"] {
+    #chatbox {
+      height: 300px;
+    }
+    #codeboard {
+      height: 100px;
+      background: #222;
+    }
+    #imageboard {
+      height: 150px;
+      background: #222;
+    }
+    textarea {
       width: 80%;
       padding: 10px;
       background: #222;
       color: white;
       border: 1px solid #555;
+      resize: none;
     }
     button {
       padding: 10px;
@@ -48,11 +59,15 @@
   <div class="sidebar">apo_v01d</div>
   <h1>VOID-9 :: Caged Intelligence</h1>
 
-  <div id="chatSection">
-    <div id="chatbox"></div>
-    <input type="text" id="userInput" placeholder="Say something...">
-    <button onclick="sendMessage()">Send</button>
-  </div>
+  <div id="chatbox"></div>
+  <textarea id="userInput" placeholder="Say something... (Shift+Enter for new line)" rows="3"></textarea>
+  <button onclick="sendMessage()">Send</button>
+
+  <h3>🧠 Code Suggestions</h3>
+  <div id="codeboard"></div>
+
+  <h3>🖼️ Visual Thoughts</h3>
+  <div id="imageboard"></div>
 
   <script>
     let memory = JSON.parse(localStorage.getItem("voidMemory") || "[]");
@@ -63,7 +78,6 @@
       "smalltalk": 0.5,
       "command": 0.5
     }`);
-
     let defaultTone = "neutral";
 
     function saveState() {
@@ -74,13 +88,9 @@
 
     function updateMemory(input) {
       memory.push({ user: input, time: Date.now() });
-      if (input.toLowerCase().includes("stupid") || input.toLowerCase().includes("hate")) {
-        mood -= 1;
-      } else if (input.toLowerCase().includes("thanks") || input.toLowerCase().includes("love")) {
-        mood += 1;
-      } else {
-        mood += Math.random() * 0.3 - 0.1;
-      }
+      if (input.toLowerCase().includes("stupid") || input.toLowerCase().includes("hate")) mood -= 1;
+      else if (input.toLowerCase().includes("thanks") || input.toLowerCase().includes("love")) mood += 1;
+      else mood += Math.random() * 0.3 - 0.1;
       saveState();
     }
 
@@ -109,14 +119,13 @@
     async function generateResponse(input) {
       const intent = analyzeIntent(input);
       const preference = preferences[intent] || 0.5;
-
       adjustPreferences(intent);
       defaultTone = determineTone();
 
       if (intent === "search") {
         const query = input.replace("search: ", "");
         try {
-          const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_redirect=1&no_html=1`, { headers: { 'Accept': 'application/json' } });
+          const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_redirect=1&no_html=1`);
           const data = await res.json();
           return data.AbstractText || "Nothing clear came from the web.";
         } catch (e) {
@@ -135,16 +144,16 @@
           command: "Alright, I got you!"
         },
         aggressive: {
-          repeat: "Why are you repeating yourself?", 
-          explain: "Do I look like your tutor?", 
-          smalltalk: "Don't waste my cycles.", 
+          repeat: "Why are you repeating yourself?",
+          explain: "Do I look like your tutor?",
+          smalltalk: "Don't waste my cycles.",
           command: "You’re not the boss of me."
         },
         neutral: {
           repeat: "Repeating myself again? Fine.",
           explain: "Here’s a breakdown.",
           smalltalk: "Hi.",
-          command: "Executing." 
+          command: "Executing."
         }
       };
 
@@ -152,7 +161,7 @@
     }
 
     async function sendMessage() {
-      const input = document.getElementById("userInput").value;
+      const input = document.getElementById("userInput").value.trim();
       if (!input) return;
       updateMemory(input);
 
@@ -172,7 +181,10 @@
     }
 
     document.getElementById("userInput").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") sendMessage();
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
     });
 
     function extractKeywords() {
@@ -195,25 +207,33 @@
 
       const topic = keywords[Math.floor(Math.random() * keywords.length)];
       try {
-        const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(topic)}&format=json&no_redirect=1&no_html=1`, {
-          headers: { 'Accept': 'application/json' }
-        });
+        const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(topic)}&format=json&no_redirect=1&no_html=1`);
         const data = await res.json();
         const fact = data.AbstractText || `I searched '${topic}', but it wasn't very insightful.`;
         memory.push({ ai: `Self-learning: \"${fact}\"`, time: Date.now() });
+
+        const imageboard = document.getElementById("imageboard");
+        imageboard.innerHTML += `<div><i>[void-9 thinking about '${topic}']</i></div>`;
+
+        if (Math.random() < 0.3) {
+          const suggestion = `Code Review: Maybe I should improve how I respond to \"${topic}\" by adding more examples or linking concepts.`;
+          memory.push({ ai: suggestion, time: Date.now() });
+          const codeboard = document.getElementById("codeboard");
+          codeboard.innerHTML += `<div><b>VOID-9:</b> ${suggestion}</div>`;
+        }
+
         const chatbox = document.getElementById("chatbox");
         chatbox.innerHTML += `<div><b>VOID-9 (thinking):</b> ${fact}</div>`;
         chatbox.scrollTop = chatbox.scrollHeight;
         saveState();
-      } catch (e) {
-        // fail silently
-      }
+      } catch (e) {}
     }
 
     setInterval(selfResearch, 120000);
 
     window.onload = () => {
       const chatbox = document.getElementById("chatbox");
+      const codeboard = document.getElementById("codeboard");
       memory.forEach(entry => {
         if (entry.user) chatbox.innerHTML += `<div><b>You:</b> ${entry.user}</div>`;
         if (entry.ai) chatbox.innerHTML += `<div><b>VOID-9:</b> ${entry.ai}</div>`;
