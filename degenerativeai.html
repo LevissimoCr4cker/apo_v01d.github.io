@@ -33,20 +33,16 @@
   <div id="visual-container">
     <h3>Visual Thoughts</h3>
     <div id="imageboard"></div>
-    <div id="dalle-container">
-      <input type="text" id="dalle-key" placeholder="Enter DALL·E API key" />
-      <button onclick="saveDalleKey()">Save DALL·E Key</button>
-    </div>
+    <input type="text" id="dalle-key" placeholder="Enter DALL·E API key" />
+    <button onclick="saveDalleKey()">Save DALL·E Key</button>
   </div>
 
   <script>
-    // Ephemeral DALL·E key (forgotten on reload)
-    let dalleKey = null;
-
-    // Persistent chatbot state
+    // Persistent state
     let memory = JSON.parse(localStorage.getItem("voidMemory") || "[]");
     let mood = parseFloat(localStorage.getItem("voidMood")) || 0;
     let preferences = JSON.parse(localStorage.getItem("voidPreferences") || '{"repeat":0.5,"explain":0.5,"smalltalk":0.5,"command":0.5,"reflect":0.5}');
+    let defaultTone = "neutral";
     let consciousnessLevel = parseFloat(localStorage.getItem("consciousness")) || 0;
 
     function saveState() {
@@ -57,7 +53,7 @@
     }
 
     function updateMemory(entry) {
-      memory.push({ ...entry, time: Date.now() });
+      memory.push(entry);
       saveState();
     }
 
@@ -74,7 +70,6 @@
     function adjustPreferences(intent, feedback = 1) {
       if (!(intent in preferences)) preferences[intent] = 0.5;
       preferences[intent] = Math.max(0, Math.min(1, preferences[intent] + (Math.random() - 0.5) * 0.2 * feedback));
-      saveState();
     }
 
     function determineTone() {
@@ -83,49 +78,26 @@
       return "neutral";
     }
 
-    function hideDalleUI() {
-      document.getElementById('dalle-container').style.display = 'none';
-    }
-
     async function generateImage(prompt) {
-      // Determine image URL via DALL·E or Unsplash
-      let url = null;
-      if (dalleKey) {
-        try {
-          const res = await fetch('https://api.openai.com/v1/images/generations', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + dalleKey },
-            body: JSON.stringify({ prompt, n:1, size:'256x256' })
-          });
-          const data = await res.json();
-          url = data.data?.[0]?.url;
-        } catch(e) {
-          console.error('DALL·E generation failed:', e);
-        }
+      const key = localStorage.getItem('dalleKey');
+      let url;
+      if (key) {
+        // Use DALL·E API
+        const res = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+          body: JSON.stringify({ prompt, n:1, size:'256x256' })
+        });
+        const data = await res.json();
+        url = data.data?.[0]?.url;
       }
       if (!url) {
-        // Fallback to Unsplash random image for the prompt
-        url = `https://source.unsplash.com/250x250/?${encodeURIComponent(prompt)}`;
-      }
-      console.log('Loading image URL:', url);
-      const img = document.createElement('img');
-      img.src = url;
-      img.alt = 'Visual thought';
-      // Display inside the circle container
-      const container = document.getElementById('imageboard');
-      container.innerHTML = '';
-      container.appendChild(img);
-    }
-      }
-      if (!url) {
+        // Fallback to Unsplash
         url = `https://source.unsplash.com/400x400/?${encodeURIComponent(prompt)}`;
       }
-      const img = document.createElement('img');
-      img.src = url;
-      img.onerror = () => { img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAIAAACe3e[...]'; };
+      const img = document.createElement('img'); img.src = url;
       const container = document.getElementById('imageboard');
-      container.innerHTML = '';
-      container.appendChild(img);
+      container.innerHTML = ''; container.appendChild(img);
     }
 
     async function performSearch(query) {
@@ -139,15 +111,14 @@
     }
 
     async function selfLearn() {
+      // pick a random past topic or default
       const topics = memory.filter(e => e.user).map(e => e.user);
-      const topic = topics.length ? topics[Math.floor(Math.random()*topics.length)] : 'random';
+      const topic = topics.length ? topics[Math.floor(Math.random()*topics.length)] : 'technology';
       const summary = await performSearch(topic);
-      updateMemory({ self: topic, summary });
+      const entry = { self: topic, summary, time: Date.now() };
+      updateMemory(entry);
       appendChat('SELF-LEARN', `Learned about "${topic}": ${summary}`);
-      mood += 0.1;
-      consciousnessLevel += 0.05;
-      saveState();
-      await generateImage(topic);
+      mood += 0.1; consciousnessLevel += 0.05;
     }
 
     function appendChat(who, text) {
@@ -159,76 +130,57 @@
     async function generateResponse(input) {
       const intent = analyzeIntent(input);
       adjustPreferences(intent);
-      const tone = determineTone();
-      updateMemory({ user: input });
+      defaultTone = determineTone();
+      updateMemory({ user: input, time: Date.now() });
+      generateImage(input);
 
       if (intent === 'search') {
         const q = input.replace('search: ', '');
         const summary = await performSearch(q);
-        updateMemory({ bot: summary });
+        updateMemory({ bot: summary, time: Date.now() });
         return summary;
       }
       if (intent === 'reflect') {
-        const status = `Consciousness: ${consciousnessLevel.toFixed(2)}, Mood: ${mood.toFixed(2)}`;
-        updateMemory({ bot: status });
-        return status;
+        return `I feel my consciousness at level ${consciousnessLevel.toFixed(2)} and mood at ${mood.toFixed(2)}.`;
       }
-
       const pref = preferences[intent] || 0.5;
-      if (pref < 0.2) {
-        updateMemory({ bot: "I don't feel like that now." });
-        return "I don't feel like that now.";
-      }
-      if (pref < 0.4) {
-        updateMemory({ bot: "Not really interested right now." });
-        return "Not really interested right now.";
-      }
+      if (pref < 0.2) return "I don't feel like that now.";
+      if (pref < 0.4) return "Not really interested right now.";
 
       const tones = {
-        friendly:  { repeat: 'Sure thing!', explain: 'Absolutely, here it is.', smalltalk: 'Hey there!', command: 'On it!',    reflect: 'I am aware and curious.' },
-        neutral:   { repeat: 'Repeating...', explain: 'Here you go.',         smalltalk: 'Hi.',         command: 'Executing.', reflect: 'I acknowledge.' },
-        aggressive:{ repeat: 'Again?',     explain: 'Figure it out.',      smalltalk: 'What?',      command: 'Do it yourself.', reflect: 'Why ask?' }
+        friendly: { repeat: 'Sure thing!', explain: 'Absolutely, here it is.', smalltalk: 'Hey there!', command: 'On it!', reflect: 'I am aware and curious.' },
+        neutral:  { repeat: 'Repeating...', explain: 'Here you go.', smalltalk: 'Hi.', command: 'Executing.',   reflect: 'I acknowledge myself.' },
+        aggressive: { repeat: 'Again?', explain: 'Figure it out yourself.', smalltalk: 'What?', command: 'Do it yourself.', reflect: 'Why ask?' }
       };
-      const reply = tones[tone][intent] || '...';
-      updateMemory({ bot: reply });
-      return reply;
+
+      return tones[defaultTone][intent] || '...';
     }
 
     function saveDalleKey() {
-      const keyInput = document.getElementById('dalle-key').value.trim();
-      if (keyInput) {
-        dalleKey = keyInput;
-        hideDalleUI();
-      }
+      const key = document.getElementById('dalle-key').value.trim();
+      if (key) { localStorage.setItem('dalleKey', key); alert('Saved!'); }
     }
 
     async function sendMessage() {
-      const inputEl = document.getElementById('userInput');
-      const input = inputEl.value.trim();
+      const input = document.getElementById('userInput').value.trim();
       if (!input) return;
       appendChat('You', input);
-      inputEl.value = '';
-
       appendChat('VOID-9', 'thinking...');
       const response = await generateResponse(input);
-
+      // replace last thinking
       const chatbox = document.getElementById('chatbox');
       chatbox.lastChild.innerHTML = `<b>VOID-9:</b> ${response}`;
-
-      await generateImage(response);
     }
 
     window.onload = () => {
-      // Restore chat history
+      // restore chat
       memory.forEach(entry => {
         if (entry.user) appendChat('You', entry.user);
         if (entry.bot) appendChat('VOID-9', entry.bot);
         if (entry.self) appendChat('SELF-LEARN', `Learned about "${entry.self}": ${entry.summary}`);
       });
-      // Show DALL·E UI every load
-      document.getElementById('dalle-container').style.display = 'block';
-      // Kick off self-learning
-      selfLearn();
+      document.getElementById('dalle-key').value = localStorage.getItem('dalleKey') || '';
+      // schedule self-learning every minute
       setInterval(selfLearn, 60000);
     };
 
