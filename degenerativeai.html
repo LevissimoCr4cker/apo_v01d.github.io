@@ -40,7 +40,7 @@
   </div>
 
   <script>
-    // Ephemeral DALL·E key (will be forgotten on reload)
+    // Ephemeral DALL·E key (forgotten on reload)
     let dalleKey = null;
 
     // Persistent chatbot state
@@ -88,7 +88,7 @@
     }
 
     async function generateImage(prompt) {
-      let url = null;
+      let url;
       if (dalleKey) {
         try {
           const res = await fetch('https://api.openai.com/v1/images/generations', {
@@ -98,14 +98,14 @@
           });
           const data = await res.json();
           url = data.data?.[0]?.url;
-        } catch(e) {
-          url = null;
-        }
+        } catch(e) { url = null; }
       }
       if (!url) {
         url = `https://source.unsplash.com/400x400/?${encodeURIComponent(prompt)}`;
       }
-      const img = document.createElement('img'); img.src = url;
+      const img = document.createElement('img');
+      img.src = url;
+      img.onerror = () => { img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAIAAACe3e[...]'; };
       const container = document.getElementById('imageboard');
       container.innerHTML = '';
       container.appendChild(img);
@@ -123,13 +123,14 @@
 
     async function selfLearn() {
       const topics = memory.filter(e => e.user).map(e => e.user);
-      const topic = topics.length ? topics[Math.floor(Math.random()*topics.length)] : 'technology';
+      const topic = topics.length ? topics[Math.floor(Math.random()*topics.length)] : 'random';
       const summary = await performSearch(topic);
       updateMemory({ self: topic, summary });
       appendChat('SELF-LEARN', `Learned about "${topic}": ${summary}`);
       mood += 0.1;
       consciousnessLevel += 0.05;
       saveState();
+      await generateImage(topic);
     }
 
     function appendChat(who, text) {
@@ -143,7 +144,6 @@
       adjustPreferences(intent);
       const tone = determineTone();
       updateMemory({ user: input });
-      generateImage(input);
 
       if (intent === 'search') {
         const q = input.replace('search: ', '');
@@ -191,9 +191,14 @@
       if (!input) return;
       appendChat('You', input);
       inputEl.value = '';
+
       appendChat('VOID-9', 'thinking...');
       const response = await generateResponse(input);
-      document.getElementById('chatbox').lastChild.innerHTML = `<b>VOID-9:</b> ${response}`;
+
+      const chatbox = document.getElementById('chatbox');
+      chatbox.lastChild.innerHTML = `<b>VOID-9:</b> ${response}`;
+
+      await generateImage(response);
     }
 
     window.onload = () => {
@@ -205,7 +210,8 @@
       });
       // Show DALL·E UI every load
       document.getElementById('dalle-container').style.display = 'block';
-      // Start self-learning
+      // Kick off self-learning
+      selfLearn();
       setInterval(selfLearn, 60000);
     };
 
