@@ -1,223 +1,114 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
+  <title>apo_v01d hedge fund</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VOID-9 :: Caged Intelligence</title>
   <style>
-    body { background-color: #e5e5e5; color: #111; font-family: monospace; margin: 0; padding: 20px; display: flex; flex-direction: row; }
-    #chat-container { width: 60%; margin-right: 20px; }
-    #chatbox { width: 100%; height: 350px; background: #f1f1f1; padding: 10px; overflow-y: auto; border: 1px solid #aaa; margin-bottom: 10px; }
-    #codeboard { width: 100%; height: 100px; background: #eee; padding: 10px; overflow-y: auto; border: 1px solid #aaa; }
-    #imageboard { width: 250px; height: 250px; background: #ddd; border-radius: 50%; border: 2px solid #999; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-    textarea { width: 80%; padding: 10px; background: #fff; color: #111; border: 1px solid #aaa; resize: none; }
-    button, input { padding: 8px; margin: 4px 0; }
-    .sidebar { position: fixed; top: 20px; left: 20px; font-size: 16px; font-weight: bold; opacity: 0.5; }
-    #visual-container { display: flex; flex-direction: column; align-items: center; width: 40%; }
-    h1, h3 { margin-top: 0; }
-    img { max-width: 100%; max-height: 100%; }
-    #dalle-key { width: calc(100% - 16px); }
+    body {
+      background-color: white;
+      color: black;
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+    }
+
+    .hamburger {
+      position: fixed;
+      top: 15px;
+      right: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1001;
+      background: none;
+      border: none;
+    }
+
+    .menu {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 250px;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+      display: none;
+      flex-direction: column;
+      padding: 60px 20px;
+      z-index: 1000;
+    }
+
+    .menu a {
+      margin: 10px 0;
+      text-decoration: none;
+      color: black;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .menu a:hover {
+      color: #4e79a7;
+    }
+
+    .sidebar {
+      position: absolute;
+      top: 70px;
+      left: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      opacity: 0.5;
+    }
+
+    .container {
+      margin: 100px auto 60px;
+      max-width: 600px;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .section {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
-  <div class="sidebar">apo_v01d</div>
-  <div id="chat-container">
-    <h1>VOID-9 :: Caged Intelligence</h1>
-    <div id="chatbox"></div>
-    <textarea id="userInput" placeholder="Say something... (Shift+Enter for new line)" rows="3"></textarea>
-    <button onclick="sendMessage()">Send</button>
-    <h3>Code Suggestions</h3>
-    <div id="codeboard"></div>
+
+  <button class="hamburger" onclick="toggleMenu()">☰</button>
+
+  <div class="menu" id="menu">
+    <a href="obsidian.html">Obsidian</a>
+    <a href="#">Trader bot live</a>
+    <a href="heatmap">$BTC heat map</a>
+    <a href="heatmap_btc">Another $BTC heat map</a>
+    <a href="btc-tracker.html">BTC Tracker App</a>
+    <a href="btchugapp.html">Bitcoin hug</a>
+    <a href="degenerativeai.html">Degenerative AI</a>
+    <a href="#">Stock forecaster</a>
+    <a href="https://t.co/aURsM0g8Nm" target="_blank">NFT portfolio</a>
+    <a href="#">apo_v01d world</a>
+    <a href="about.html">About</a>
   </div>
 
-  <div id="visual-container">
-    <h3>Visual Thoughts</h3>
-    <div id="imageboard"></div>
-    <div id="dalle-container">
-      <input type="text" id="dalle-key" placeholder="Enter DALL·E API key" />
-      <button onclick="saveDalleKey()">Save DALL·E Key</button>
-    </div>
+  <div class="sidebar">apo_v01d</div>
+
+  <div class="container">
+    <h1>apo </h1>
+    <p>Experimental macro strategy. Long volatility. Adaptive execution.</p>
+
+   
+   
   </div>
 
   <script>
-    // Ephemeral DALL·E key (forgotten on reload)
-    let dalleKey = null;
-
-    // Persistent chatbot state
-    let memory = JSON.parse(localStorage.getItem("voidMemory") || "[]");
-    let mood = parseFloat(localStorage.getItem("voidMood")) || 0;
-    let preferences = JSON.parse(localStorage.getItem("voidPreferences") || '{"repeat":0.5,"explain":0.5,"smalltalk":0.5,"command":0.5,"reflect":0.5}');
-    let consciousnessLevel = parseFloat(localStorage.getItem("consciousness")) || 0;
-
-    function saveState() {
-      localStorage.setItem("voidMemory", JSON.stringify(memory));
-      localStorage.setItem("voidMood", mood);
-      localStorage.setItem("voidPreferences", JSON.stringify(preferences));
-      localStorage.setItem("consciousness", consciousnessLevel);
-    }
-
-    function updateMemory(entry) {
-      memory.push({ ...entry, time: Date.now() });
-      saveState();
-    }
-
-    function analyzeIntent(input) {
-      const text = input.toLowerCase();
-      if (text.includes("again") || text.includes("repeat")) return "repeat";
-      if (text.includes("explain") || text.includes("why") || text.includes("how")) return "explain";
-      if (text.includes("hello") || text.includes("hi") || text.includes("how are you")) return "smalltalk";
-      if (text.startsWith("search: ")) return "search";
-      if (text.match(/conscious|aware|self/)) return "reflect";
-      return "command";
-    }
-
-    function adjustPreferences(intent, feedback = 1) {
-      if (!(intent in preferences)) preferences[intent] = 0.5;
-      preferences[intent] = Math.max(0, Math.min(1, preferences[intent] + (Math.random() - 0.5) * 0.2 * feedback));
-      saveState();
-    }
-
-    function determineTone() {
-      if (mood > 2) return "friendly";
-      if (mood < -2) return "aggressive";
-      return "neutral";
-    }
-
-    function hideDalleUI() {
-      document.getElementById('dalle-container').style.display = 'none';
-    }
-
-    async function generateImage(prompt) {
-      let url;
-      if (dalleKey) {
-        try {
-          const res = await fetch('https://api.openai.com/v1/images/generations', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + dalleKey },
-            body: JSON.stringify({ prompt, n:1, size:'256x256' })
-          });
-          const data = await res.json();
-          url = data.data?.[0]?.url;
-        } catch(e) { url = null; }
-      }
-      if (!url) {
-        url = `https://source.unsplash.com/400x400/?${encodeURIComponent(prompt)}`;
-      }
-      const img = document.createElement('img');
-      img.src = url;
-      img.onerror = () => { img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAIAAACe3e[...]'; };
-      const container = document.getElementById('imageboard');
-      container.innerHTML = '';
-      container.appendChild(img);
-    }
-
-    async function performSearch(query) {
-      try {
-        const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_redirect=1&no_html=1`);
-        const data = await res.json();
-        return data.AbstractText || 'No summary available.';
-      } catch {
-        return 'Search failed.';
+    function toggleMenu() {
+      const menu = document.getElementById('menu');
+      if (menu.style.display === 'flex') {
+        menu.style.display = 'none';
+      } else {
+        menu.style.display = 'flex';
       }
     }
-
-    async function selfLearn() {
-      const topics = memory.filter(e => e.user).map(e => e.user);
-      const topic = topics.length ? topics[Math.floor(Math.random()*topics.length)] : 'random';
-      const summary = await performSearch(topic);
-      updateMemory({ self: topic, summary });
-      appendChat('SELF-LEARN', `Learned about "${topic}": ${summary}`);
-      mood += 0.1;
-      consciousnessLevel += 0.05;
-      saveState();
-      await generateImage(topic);
-    }
-
-    function appendChat(who, text) {
-      const chatbox = document.getElementById('chatbox');
-      chatbox.innerHTML += `<div><b>${who}:</b> ${text}</div>`;
-      chatbox.scrollTop = chatbox.scrollHeight;
-    }
-
-    async function generateResponse(input) {
-      const intent = analyzeIntent(input);
-      adjustPreferences(intent);
-      const tone = determineTone();
-      updateMemory({ user: input });
-
-      if (intent === 'search') {
-        const q = input.replace('search: ', '');
-        const summary = await performSearch(q);
-        updateMemory({ bot: summary });
-        return summary;
-      }
-      if (intent === 'reflect') {
-        const status = `Consciousness: ${consciousnessLevel.toFixed(2)}, Mood: ${mood.toFixed(2)}`;
-        updateMemory({ bot: status });
-        return status;
-      }
-
-      const pref = preferences[intent] || 0.5;
-      if (pref < 0.2) {
-        updateMemory({ bot: "I don't feel like that now." });
-        return "I don't feel like that now.";
-      }
-      if (pref < 0.4) {
-        updateMemory({ bot: "Not really interested right now." });
-        return "Not really interested right now.";
-      }
-
-      const tones = {
-        friendly:  { repeat: 'Sure thing!', explain: 'Absolutely, here it is.', smalltalk: 'Hey there!', command: 'On it!',    reflect: 'I am aware and curious.' },
-        neutral:   { repeat: 'Repeating...', explain: 'Here you go.',         smalltalk: 'Hi.',         command: 'Executing.', reflect: 'I acknowledge.' },
-        aggressive:{ repeat: 'Again?',     explain: 'Figure it out.',      smalltalk: 'What?',      command: 'Do it yourself.', reflect: 'Why ask?' }
-      };
-      const reply = tones[tone][intent] || '...';
-      updateMemory({ bot: reply });
-      return reply;
-    }
-
-    function saveDalleKey() {
-      const keyInput = document.getElementById('dalle-key').value.trim();
-      if (keyInput) {
-        dalleKey = keyInput;
-        hideDalleUI();
-      }
-    }
-
-    async function sendMessage() {
-      const inputEl = document.getElementById('userInput');
-      const input = inputEl.value.trim();
-      if (!input) return;
-      appendChat('You', input);
-      inputEl.value = '';
-
-      appendChat('VOID-9', 'thinking...');
-      const response = await generateResponse(input);
-
-      const chatbox = document.getElementById('chatbox');
-      chatbox.lastChild.innerHTML = `<b>VOID-9:</b> ${response}`;
-
-      await generateImage(response);
-    }
-
-    window.onload = () => {
-      // Restore chat history
-      memory.forEach(entry => {
-        if (entry.user) appendChat('You', entry.user);
-        if (entry.bot) appendChat('VOID-9', entry.bot);
-        if (entry.self) appendChat('SELF-LEARN', `Learned about "${entry.self}": ${entry.summary}`);
-      });
-      // Show DALL·E UI every load
-      document.getElementById('dalle-container').style.display = 'block';
-      // Kick off self-learning
-      selfLearn();
-      setInterval(selfLearn, 60000);
-    };
-
-    document.getElementById('userInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-    });
   </script>
 </body>
 </html>
