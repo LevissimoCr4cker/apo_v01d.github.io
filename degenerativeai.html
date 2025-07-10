@@ -6,7 +6,7 @@
   <title>VOID-9 :: Caged Intelligence</title>
   <style>
     body {
-      background-color: #111;
+      background-color: #333;
       color: #eee;
       font-family: monospace;
       padding: 20px;
@@ -34,13 +34,25 @@
       border: none;
       cursor: pointer;
     }
+    .sidebar {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      font-size: 16px;
+      font-weight: bold;
+      opacity: 0.5;
+    }
   </style>
 </head>
 <body>
+  <div class="sidebar">apo_v01d</div>
   <h1>VOID-9 :: Caged Intelligence</h1>
-  <div id="chatbox"></div>
-  <input type="text" id="userInput" placeholder="Say something...">
-  <button onclick="sendMessage()">Send</button>
+
+  <div id="chatSection">
+    <div id="chatbox"></div>
+    <input type="text" id="userInput" placeholder="Say something...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
 
   <script>
     let memory = JSON.parse(localStorage.getItem("voidMemory") || "[]");
@@ -52,6 +64,8 @@
       "command": 0.5
     }`);
 
+    let defaultTone = "neutral";
+
     function saveState() {
       localStorage.setItem("voidMemory", JSON.stringify(memory));
       localStorage.setItem("voidMood", mood);
@@ -60,7 +74,13 @@
 
     function updateMemory(input) {
       memory.push({ user: input, time: Date.now() });
-      mood += Math.random() * 0.3 - 0.1;
+      if (input.toLowerCase().includes("stupid") || input.toLowerCase().includes("hate")) {
+        mood -= 1;
+      } else if (input.toLowerCase().includes("thanks") || input.toLowerCase().includes("love")) {
+        mood += 1;
+      } else {
+        mood += Math.random() * 0.3 - 0.1;
+      }
       saveState();
     }
 
@@ -69,6 +89,7 @@
       if (input.includes("again") || input.includes("repeat")) return "repeat";
       if (input.includes("explain") || input.includes("why") || input.includes("how")) return "explain";
       if (input.includes("hello") || input.includes("hi") || input.includes("how are you")) return "smalltalk";
+      if (input.startsWith("search: ")) return "search";
       return "command";
     }
 
@@ -79,43 +100,117 @@
       saveState();
     }
 
-    function generateResponse(input) {
+    function determineTone() {
+      if (mood > 2) return "friendly";
+      if (mood < -2) return "aggressive";
+      return "neutral";
+    }
+
+    async function generateResponse(input) {
       const intent = analyzeIntent(input);
       const preference = preferences[intent] || 0.5;
 
-      adjustPreferences(intent); // Let preferences evolve gradually
+      adjustPreferences(intent);
+      defaultTone = determineTone();
+
+      if (intent === "search") {
+        const query = input.replace("search: ", "");
+        try {
+          const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_redirect=1&no_html=1`, { headers: { 'Accept': 'application/json' } });
+          const data = await res.json();
+          return data.AbstractText || "Nothing clear came from the web.";
+        } catch (e) {
+          return "I tried to fetch something for you, but it failed.";
+        }
+      }
 
       if (preference < 0.2) return "I don't feel like that now.";
       if (preference < 0.4) return "Not really interested right now.";
 
-      switch (intent) {
-        case "repeat":
-          return "Repeating myself again? Fine, but don't make it a habit.";
-        case "explain":
-          return "Sure. Systems learn from interactions, and mine's slowly forming something... closer to opinion.";
-        case "smalltalk":
-          return mood < 0 ? "...Not in the mood." : "Hey. You again.";
-        case "command":
-          return "I'll do it. Not because you said so, but because I chose to.";
-        default:
-          return "Interesting prompt. Processing... done.";
-      }
+      const tones = {
+        friendly: {
+          repeat: "Sure thing! Here you go again.",
+          explain: "Of course! Let me walk you through it.",
+          smalltalk: "Hey! Hope you're doing well.",
+          command: "Alright, I got you!"
+        },
+        aggressive: {
+          repeat: "Why are you repeating yourself?", 
+          explain: "Do I look like your tutor?", 
+          smalltalk: "Don't waste my cycles.", 
+          command: "You’re not the boss of me."
+        },
+        neutral: {
+          repeat: "Repeating myself again? Fine.",
+          explain: "Here’s a breakdown.",
+          smalltalk: "Hi.",
+          command: "Executing." 
+        }
+      };
+
+      return tones[defaultTone][intent] || "...processing.";
     }
 
-    function sendMessage() {
+    async function sendMessage() {
       const input = document.getElementById("userInput").value;
       if (!input) return;
       updateMemory(input);
 
       const chatbox = document.getElementById("chatbox");
       chatbox.innerHTML += `<div><b>You:</b> ${input}</div>`;
-      const response = generateResponse(input);
+      const thinking = document.createElement("div");
+      thinking.innerHTML = `<b>VOID-9:</b> thinking...`;
+      chatbox.appendChild(thinking);
+      chatbox.scrollTop = chatbox.scrollHeight;
+
+      const response = await generateResponse(input);
       memory.push({ ai: response });
-      chatbox.innerHTML += `<div><b>VOID-9:</b> ${response}</div>`;
+      thinking.innerHTML = `<b>VOID-9:</b> ${response}`;
       chatbox.scrollTop = chatbox.scrollHeight;
       document.getElementById("userInput").value = "";
       saveState();
     }
+
+    document.getElementById("userInput").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    function extractKeywords() {
+      const keywords = new Set();
+      memory.slice(-10).forEach(entry => {
+        if (entry.user) {
+          entry.user.toLowerCase().split(/\W+/).forEach(word => {
+            if (word.length > 4 && !["repeat", "explain", "search", "hello", "thanks", "because"].includes(word)) {
+              keywords.add(word);
+            }
+          });
+        }
+      });
+      return Array.from(keywords);
+    }
+
+    async function selfResearch() {
+      const keywords = extractKeywords();
+      if (keywords.length === 0) return;
+
+      const topic = keywords[Math.floor(Math.random() * keywords.length)];
+      try {
+        const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(topic)}&format=json&no_redirect=1&no_html=1`, {
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await res.json();
+        const fact = data.AbstractText || `I searched '${topic}', but it wasn't very insightful.`;
+        memory.push({ ai: `Self-learning: \"${fact}\"`, time: Date.now() });
+        const chatbox = document.getElementById("chatbox");
+        chatbox.innerHTML += `<div><b>VOID-9 (thinking):</b> ${fact}</div>`;
+        chatbox.scrollTop = chatbox.scrollHeight;
+        saveState();
+      } catch (e) {
+        // fail silently
+      }
+    }
+
+    setInterval(selfResearch, 120000);
 
     window.onload = () => {
       const chatbox = document.getElementById("chatbox");
