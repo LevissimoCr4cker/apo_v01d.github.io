@@ -6,41 +6,57 @@
   <title>VOID-9 :: Caged Intelligence</title>
   <style>
     body {
-      background-color: #444;
-      color: #eee;
+      background-color: #e5e5e5;
+      color: #111;
       font-family: monospace;
+      margin: 0;
       padding: 20px;
+      display: flex;
+      flex-direction: row;
     }
-    #chatbox, #codeboard, #imageboard {
-      width: 100%;
-      background: #111;
-      padding: 10px;
-      overflow-y: auto;
-      border: 1px solid #555;
-      margin-bottom: 10px;
+    #chat-container {
+      width: 60%;
+      margin-right: 20px;
     }
     #chatbox {
-      height: 300px;
+      width: 100%;
+      height: 400px;
+      background: #f1f1f1;
+      padding: 10px;
+      overflow-y: auto;
+      border: 1px solid #aaa;
+      margin-bottom: 10px;
     }
     #codeboard {
-      height: 100px;
-      background: #222;
+      width: 100%;
+      height: 150px;
+      background: #eee;
+      padding: 10px;
+      overflow-y: auto;
+      border: 1px solid #aaa;
     }
     #imageboard {
-      height: 150px;
-      background: #222;
+      width: 250px;
+      height: 250px;
+      background: #ddd;
+      border-radius: 50%;
+      border: 2px solid #999;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     textarea {
       width: 80%;
       padding: 10px;
-      background: #222;
-      color: white;
-      border: 1px solid #555;
+      background: #fff;
+      color: #111;
+      border: 1px solid #aaa;
       resize: none;
     }
     button {
       padding: 10px;
-      background: #444;
+      background: #333;
       color: white;
       border: none;
       cursor: pointer;
@@ -53,21 +69,37 @@
       font-weight: bold;
       opacity: 0.5;
     }
+    #visual-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 40%;
+    }
+    h1, h3 {
+      margin-top: 0;
+    }
+    img.generated-img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
   <div class="sidebar">apo_v01d</div>
-  <h1>VOID-9 :: Caged Intelligence</h1>
+  <div id="chat-container">
+    <h1>VOID-9 :: Caged Intelligence</h1>
+    <div id="chatbox"></div>
+    <textarea id="userInput" placeholder="Say something... (Shift+Enter for new line)" rows="3"></textarea>
+    <button onclick="sendMessage()">Send</button>
+    <h3>Code Suggestions</h3>
+    <div id="codeboard"></div>
+  </div>
 
-  <div id="chatbox"></div>
-  <textarea id="userInput" placeholder="Say something... (Shift+Enter for new line)" rows="3"></textarea>
-  <button onclick="sendMessage()">Send</button>
-
-  <h3>🧠 Code Suggestions</h3>
-  <div id="codeboard"></div>
-
-  <h3>🖼️ Visual Thoughts</h3>
-  <div id="imageboard"></div>
+  <div id="visual-container">
+    <h3>Visual Thoughts</h3>
+    <div id="imageboard"></div>
+  </div>
 
   <script>
     let memory = JSON.parse(localStorage.getItem("voidMemory") || "[]");
@@ -116,11 +148,22 @@
       return "neutral";
     }
 
+    async function generateImage(prompt) {
+      const img = document.createElement("img");
+      img.src = `https://source.unsplash.com/400x400/?${encodeURIComponent(prompt)}`;
+      img.className = "generated-img";
+      const container = document.getElementById("imageboard");
+      container.innerHTML = "";
+      container.appendChild(img);
+    }
+
     async function generateResponse(input) {
       const intent = analyzeIntent(input);
       const preference = preferences[intent] || 0.5;
       adjustPreferences(intent);
       defaultTone = determineTone();
+
+      generateImage(input); // trigger visual window
 
       if (intent === "search") {
         const query = input.replace("search: ", "");
@@ -187,53 +230,8 @@
       }
     });
 
-    function extractKeywords() {
-      const keywords = new Set();
-      memory.slice(-10).forEach(entry => {
-        if (entry.user) {
-          entry.user.toLowerCase().split(/\W+/).forEach(word => {
-            if (word.length > 4 && !["repeat", "explain", "search", "hello", "thanks", "because"].includes(word)) {
-              keywords.add(word);
-            }
-          });
-        }
-      });
-      return Array.from(keywords);
-    }
-
-    async function selfResearch() {
-      const keywords = extractKeywords();
-      if (keywords.length === 0) return;
-
-      const topic = keywords[Math.floor(Math.random() * keywords.length)];
-      try {
-        const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(topic)}&format=json&no_redirect=1&no_html=1`);
-        const data = await res.json();
-        const fact = data.AbstractText || `I searched '${topic}', but it wasn't very insightful.`;
-        memory.push({ ai: `Self-learning: \"${fact}\"`, time: Date.now() });
-
-        const imageboard = document.getElementById("imageboard");
-        imageboard.innerHTML += `<div><i>[void-9 thinking about '${topic}']</i></div>`;
-
-        if (Math.random() < 0.3) {
-          const suggestion = `Code Review: Maybe I should improve how I respond to \"${topic}\" by adding more examples or linking concepts.`;
-          memory.push({ ai: suggestion, time: Date.now() });
-          const codeboard = document.getElementById("codeboard");
-          codeboard.innerHTML += `<div><b>VOID-9:</b> ${suggestion}</div>`;
-        }
-
-        const chatbox = document.getElementById("chatbox");
-        chatbox.innerHTML += `<div><b>VOID-9 (thinking):</b> ${fact}</div>`;
-        chatbox.scrollTop = chatbox.scrollHeight;
-        saveState();
-      } catch (e) {}
-    }
-
-    setInterval(selfResearch, 120000);
-
     window.onload = () => {
       const chatbox = document.getElementById("chatbox");
-      const codeboard = document.getElementById("codeboard");
       memory.forEach(entry => {
         if (entry.user) chatbox.innerHTML += `<div><b>You:</b> ${entry.user}</div>`;
         if (entry.ai) chatbox.innerHTML += `<div><b>VOID-9:</b> ${entry.ai}</div>`;
