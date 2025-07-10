@@ -88,7 +88,8 @@
     }
 
     async function generateImage(prompt) {
-      let url;
+      // Determine image URL via DALL·E or Unsplash
+      let url = null;
       if (dalleKey) {
         try {
           const res = await fetch('https://api.openai.com/v1/images/generations', {
@@ -98,7 +99,23 @@
           });
           const data = await res.json();
           url = data.data?.[0]?.url;
-        } catch(e) { url = null; }
+        } catch(e) {
+          console.error('DALL·E generation failed:', e);
+        }
+      }
+      if (!url) {
+        // Fallback to Unsplash random image for the prompt
+        url = `https://source.unsplash.com/250x250/?${encodeURIComponent(prompt)}`;
+      }
+      console.log('Loading image URL:', url);
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = 'Visual thought';
+      // Display inside the circle container
+      const container = document.getElementById('imageboard');
+      container.innerHTML = '';
+      container.appendChild(img);
+    }
       }
       if (!url) {
         url = `https://source.unsplash.com/400x400/?${encodeURIComponent(prompt)}`;
