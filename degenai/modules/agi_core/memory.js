@@ -1,136 +1,70 @@
-import { db, collection, addDoc, getDocs, query, orderBy } from './firebase.js';
+import { db, collection, addDoc, getDocs } from './firebase.js';
 
-// === SHORT-TERM MEMORY (PER TAB) ===
+// === SHORT-TERM MEMORY ===
 let sessionHistory = [];
+let wordCounts = {};
+let profileId = null; // será nomeado após a primeira interação
 
-// === PROFILE OBJECT (LONG-TERM) ===
-let userProfile = {
-  traits: {},
-  log: [],
-  lastSavedId: null
-};
-
-// === SAVE INTERACTION ===
+// === FUNÇÃO PRINCIPAL ===
 export async function saveInteraction(userText, botReply) {
-  // Curto prazo
   sessionHistory.push({ user: userText, bot: botReply });
-  userProfile.log.push(userText);
-  extractTraits(userText);
 
-  // Resumo do perfil atual
-  const summary = summarizeProfile();
-  const profileId = summary.id;
+  // === Atualizar contagem de palavras
+  const words = userText.toLowerCase().split(/\W+/).filter(Boolean);
+  for (const word of words) {
+    wordCounts[word] = (wordCounts[word] || 0) + 1;
+  }
 
+  // === Gerar profileId se ainda não existir
+  if (!profileId) {
+    profileId = getTopWord();
+    await saveProfile(); // salva o perfil só 1 vez por sessão
+  }
+
+  // === Salvar nas 3 coleções
   await Promise.allSettled([
-    saveCorpus(userText, botReply, profileId),
-    saveToProfile(summary),
     addDoc(collection(db, "conversations"), {
       user: userText,
       bot: botReply,
+      timestamp: new Date()
+    }),
+
+    addDoc(collection(db, "corpus"), {
+      userText,
+      botReply,
+      tokens: words,
+      profileId,
       timestamp: new Date()
     })
   ]);
 }
 
-// === LOAD MEMORY FROM FIREBASE ===
-export async function loadMemory() {
-  const q = query(collection(db, "conversations"), orderBy("timestamp"));
-  const snapshot = await getDocs(q);
-  const allMessages = [];
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    allMessages.push(data);
-    sessionHistory.push({ user: data.user, bot: data.bot });
-  });
-  return allMessages;
+// === GERAR PERFIL
+function getTopWord() {
+  const sorted = Object.entries(wordCounts)
+    .sort((a, b) => b[1] - a[1]);
+
+  return sorted.length > 0 ? sorted[0][0] : "anonymous";
 }
 
-// === CORPUS GLOBAL ===
-async function saveCorpus(user, bot, profileId) {
-  const tokens = user.toLowerCase().split(/\W+/).filter(Boolean);
-  await addDoc(collection(db, "corpus"), {
-    userText: user,
-    botReply: bot,
-    tokens,
-    profileId,
-    timestamp: Date.now()
-  });
-}
-
-// === LONG-TERM PROFILE STORAGE ===
-async function saveToProfile(summary) {
-  if (summary.id === userProfile.lastSavedId) return;
-  userProfile.lastSavedId = summary.id;
-
-  await addDoc(collection(db, "profiles"), summary);
-}
-
-// === EXTRACT TRAITS FROM TEXT ===
-function extractTraits(text) {
-  const lower = text.toLowerCase();
-  const words = lower.split(/\W+/);
-  for (const word of words) {
-    if (!word) continue;
-    userProfile.traits[word] = (userProfile.traits[word] || 0) + 1;
-  }
-}
-
-// === SUMMARIZE PROFILE ===
-function summarizeProfile() {
-  const sorted = Object.entries(userProfile.traits)
+async function saveProfile() {
+  const topWords = Object.entries(wordCounts)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 50);
+    .slice(0, 10)
+    .map(e => e[0]);
 
-  const topWords = sorted.map(e => e[0]);
-  const id = sorted.length > 0 ? sorted[0][0] : "anonymous";
-
-  return {
-    id,
+  await addDoc(collection(db, "profiles"), {
+    id: profileId,
     topWords,
-    traits: userProfile.traits,
-    timestamp: Date.now()
-  };
-}
-
-// === MATCH PROFILE FROM INPUT ===
-export async function matchProfile(text) {
-  const inputWords = text.toLowerCase().split(/\W+/).filter(Boolean);
-
-  const snapshot = await getDocs(collection(db, "profiles"));
-  let bestMatch = null;
-  let maxMatches = 0;
-
-  snapshot.forEach(doc => {
-    const profile = doc.data();
-    const overlap = profile.topWords.filter(w => inputWords.includes(w));
-    if (overlap.length >= 10 && overlap.length > maxMatches) {
-      maxMatches = overlap.length;
-      bestMatch = profile.id;
-    }
+    timestamp: new Date()
   });
-
-  return bestMatch || "anonymous";
 }
 
-// === GETTERS ===
-export function getUserProfile() {
-  return userProfile;
-}
-
+// === UTILITÁRIOS
 export function getSessionLog() {
   return sessionHistory;
 }
 
-// === LOCAL STORAGE ===
-export function exportProfileToLocalStorage() {
-  const profileSummary = summarizeProfile();
-  localStorage.setItem("void9_user_profile", JSON.stringify(profileSummary));
-}
-
-export function loadProfileFromStorage() {
-  const raw = localStorage.getItem("void9_user_profile");
-  if (raw) {
-    const parsed = JSON.parse(raw);
-    userProfile.traits = parsed.traits || {};
-  }
+export function getProfileId() {
+  return profileId;
 }

@@ -53,10 +53,10 @@ export function sendMessage() {
   messageInput.value = '';
   suggestions.textContent = `(last phrase: "${msg}")`;
 
-  // Save interaction in memory
-  saveToMemory('you', msg);
-  saveToMemory('void-9', botReply);
+  // Salva tudo: perfil, corpus, conversa
+  saveInteraction(msg, botReply);
 }
+
 
 messageInput.addEventListener('keypress', function (e) {
   if (e.key === 'Enter') sendMessage();
