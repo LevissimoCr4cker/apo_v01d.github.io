@@ -4,16 +4,33 @@ import {
   saveInteraction,
   getUserProfile,
   exportProfileToLocalStorage,
-  loadProfileFromStorage
-} from './memory.js';
+  loadProfileFromStorage,
+  loadMemory,
+  saveToMemory
+} from './memory.js'; // Corrigido caminho para './memory.js' (evite repetir 'modules/agi_core')
 
-// DOM elements
 const chatbox = document.getElementById('chatbox');
 const messageInput = document.getElementById('message');
 const suggestions = document.getElementById('suggestions');
 
-// Load profile on start
+// Load profile and memory on start
 loadProfileFromStorage();
+
+window.addEventListener('DOMContentLoaded', async () => {
+  const messages = await loadMemory();
+  messages.forEach(m => {
+    addMessageToChat(m.user, m.message);
+  });
+});
+
+// Render function
+function addMessageToChat(user, message) {
+  const div = document.createElement('div');
+  div.textContent = `${user}: ${message}`;
+  div.style.color = user === 'you' ? '#0ff' : '#aaa';
+  chatbox.appendChild(div);
+  chatbox.scrollTop = chatbox.scrollHeight;
+}
 
 // Basic bot behavior (mocked)
 function generateBotReply(userText) {
@@ -28,31 +45,24 @@ export function sendMessage() {
   const msg = messageInput.value.trim();
   if (!msg) return;
 
-  const userDiv = document.createElement('div');
-  userDiv.textContent = 'you: ' + msg;
-  userDiv.style.color = '#0ff';
-  chatbox.appendChild(userDiv);
+  addMessageToChat('you', msg);
 
   const botReply = generateBotReply(msg);
-
-  const botDiv = document.createElement('div');
-  botDiv.textContent = 'void-9: ' + botReply;
-  botDiv.style.color = '#aaa';
-  chatbox.appendChild(botDiv);
+  addMessageToChat('void-9', botReply);
 
   messageInput.value = '';
-  chatbox.scrollTop = chatbox.scrollHeight;
-
   suggestions.textContent = `(last phrase: "${msg}")`;
 
-  saveInteraction(msg, botReply);
+  // Save interaction in memory
+  saveToMemory('you', msg);
+  saveToMemory('void-9', botReply);
 }
 
 messageInput.addEventListener('keypress', function (e) {
   if (e.key === 'Enter') sendMessage();
 });
 
-// When user leaves the tab, save the profile summary
+// Save profile summary when user leaves
 window.onbeforeunload = () => {
   exportProfileToLocalStorage();
 };
