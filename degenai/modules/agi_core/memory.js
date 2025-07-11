@@ -6,6 +6,21 @@ let sessionHistory = [];
 let wordCounts = {};
 let profileId = null;
 let topWordsArr = [];
+let processedQueries = new Set();
+
+// Configura Self-Learning Updates (barra de rolagem, máximo 10 entries)
+function setupUpdatesWindow() {
+  document.addEventListener('DOMContentLoaded', () => {
+    const updatesDiv = document.getElementById('updates');
+    if (updatesDiv) {
+      updatesDiv.style.maxHeight = '200px';
+      updatesDiv.style.overflowY = 'auto';
+      updatesDiv.style.display = 'flex';
+      updatesDiv.style.flexDirection = 'column-reverse';
+    }
+  });
+}
+setupUpdatesWindow();
 
 // ——— Função principal ———
 export async function saveInteraction(userText, botReply) {
@@ -23,7 +38,6 @@ export async function saveInteraction(userText, botReply) {
 
   // 3) Perfil (primeira vez somente)
   if (!profileId) {
-    // escolhe a palavra mais frequente
     profileId = Object.entries(wordCounts)
       .sort(([,a],[,b]) => b - a)
       .map(([w]) => w)[0] || 'anonymous';
@@ -32,22 +46,10 @@ export async function saveInteraction(userText, botReply) {
 
   // 4) Grava nos 4 gates
   await Promise.all([
-    // Conversations (volátil)
-    addDoc(collection(db, 'conversations'), {
-      profileId, userText, botReply, timestamp
-    }),
-    // Corpus (médio prazo)
-    addDoc(collection(db, 'corpus'), {
-      profileId, userText, botReply, tokens, timestamp
-    }),
-    // Event Gates (timeline)
-    addDoc(collection(db, 'event_gates'), {
-      profileId,
-      eventType: 'interaction',
-      data: { userText, botReply },
-      timestamp
-    })
-    // Profiles já foi criado em saveProfile, não precisa aqui
+    addDoc(collection(db, 'conversations'), { profileId, userText, botReply, timestamp }),
+    addDoc(collection(db, 'corpus'),        { profileId, userText, botReply, tokens, timestamp }),
+    addDoc(collection(db, 'event_gates'),   { profileId, eventType: 'interaction', data: { userText, botReply }, timestamp })
+    // profiles já foi criado em saveProfile
   ]);
 
   // 5) Persiste localmente
@@ -61,21 +63,62 @@ async function saveProfile() {
     .slice(0,10)
     .map(([w]) => w);
 
-  await addDoc(collection(db, 'profiles'), {
-    id: profileId,
-    topWords: topWordsArr,
-    createdAt: new Date()
-  });
-
-  // E salva imediatamente no localStorage
+  await addDoc(collection(db, 'profiles'), { id: profileId, topWords: topWordsArr, createdAt: new Date() });
   exportProfileToLocalStorage();
 }
+
+// ——— Fator Surpresa ———
+async function runSurprise() {
+  if (!sessionHistory.length) return;
+  const idx = Math.floor(Math.random() * sessionHistory.length);
+  const query = sessionHistory[idx].user;
+  if (processedQueries.has(query)) return;
+  processedQueries.add(query);
+
+  try {
+    const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`);
+    const data = await res.json();
+    const summary = data.AbstractText || (data.RelatedTopics[0] && data.RelatedTopics[0].Text) || '';
+    if (!summary) return;
+
+    const timestamp = new Date();
+    // salva no corpus
+    await addDoc(collection(db, 'corpus'), {
+      profileId, userText: query, surpriseSummary: summary, source: 'duckduckgo', timestamp
+    });
+
+    // se contiver data, salva em event_gates
+    const datePattern = /\d{4}-\d{2}-\d{2}/;
+    const monthNames = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/;
+    if (datePattern.test(summary) || monthNames.test(summary)) {
+      await addDoc(collection(db, 'event_gates'), {
+        profileId, eventType: 'surpriseEvent', data: { query, summary }, timestamp
+      });
+    }
+
+    // Exibe no Self-Learning Updates
+    const updatesDiv = document.getElementById('updates');
+    if (updatesDiv) {
+      const entry = document.createElement('div');
+      entry.textContent = `Pesquisado: "${query}" → Aprendizado: ${summary}`;
+      updatesDiv.prepend(entry);
+      // Limita a 10 registros
+      while (updatesDiv.children.length > 10) {
+        updatesDiv.removeChild(updatesDiv.lastChild);
+      }
+    }
+  } catch (err) {
+    console.error('Surprise factor error:', err);
+  }
+}
+
+// inicia o fator surpresa a cada 60s sem recarregar página
+setInterval(runSurprise, 60_000);
 
 // ——— Persistência local ———
 export function saveToMemory() {
   localStorage.setItem('sessionHistory', JSON.stringify(sessionHistory));
 }
-
 export function loadMemory() {
   const raw = localStorage.getItem('sessionHistory');
   sessionHistory = raw ? JSON.parse(raw) : [];
@@ -84,12 +127,8 @@ export function loadMemory() {
 
 export function exportProfileToLocalStorage() {
   if (!profileId) return;
-  localStorage.setItem('userProfile', JSON.stringify({
-    profileId,
-    topWords: topWordsArr
-  }));
+  localStorage.setItem('userProfile', JSON.stringify({ profileId, topWords: topWordsArr }));
 }
-
 export function loadProfileFromStorage() {
   const raw = localStorage.getItem('userProfile');
   if (!raw) return;
@@ -98,7 +137,6 @@ export function loadProfileFromStorage() {
   topWordsArr = topWords;
 }
 
-// ——— Acesso ao perfil na UI (opcional) ———
 export function getUserProfile() {
   return { profileId, topWords: topWordsArr };
 }

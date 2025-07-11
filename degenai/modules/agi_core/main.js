@@ -57,7 +57,6 @@ export function sendMessage() {
   saveInteraction(msg, botReply);
 }
 
-
 messageInput.addEventListener('keypress', function (e) {
   if (e.key === 'Enter') sendMessage();
 });
