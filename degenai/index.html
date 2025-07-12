@@ -8,8 +8,8 @@
     body {
       margin: 0;
       font-family: monospace, sans-serif;
-      background: #0a0a0a;
-      color: #f0f0f0;
+      background: #000;
+      color: #fff;
       display: flex;
       flex-direction: column;
       height: 100vh;
@@ -42,7 +42,10 @@
       border: 1px solid #333;
       padding: 1rem;
       overflow-y: auto;
-      background: #1a1a1a;
+      background: #000;
+      color: #fff;
+      max-height: 300px;
+      white-space: pre-wrap;
     }
     #input-area {
       display: flex;
@@ -63,20 +66,23 @@
       border: none;
       cursor: pointer;
     }
-    #pin-board {
-      padding: 1rem;
-      border-top: 1px solid #444;
-      background: #1a1a1a;
-      min-height: 100px;
-      overflow-y: auto;
-      margin-bottom: 1rem;
-    }
     #learning-updates {
       padding: 1rem;
       border-top: 1px solid #444;
-      background: #1a1a1a;
+      background: #000;
       min-height: 100px;
       overflow-y: auto;
+      max-height: 150px;
+      color: #fff;
+    }
+    #pin-board {
+      padding: 1rem;
+      border-top: 1px solid #444;
+      background: #000;
+      min-height: 100px;
+      overflow-y: auto;
+      max-height: 150px;
+      color: #fff;
     }
     #circle-visual {
       flex: 1;
@@ -98,8 +104,8 @@
       font-weight: bold;
       text-align: center;
       margin-bottom: 1rem;
-      background-color: #111;
-      color: #f0f0f0;
+      background-color: #000;
+      color: #fff;
       position: relative;
     }
     .circle-label {
@@ -155,13 +161,13 @@
         <input type="text" id="message" placeholder="Type your message..." />
         <button id="sendBtn">Send</button>
       </div>
-      <div id="pin-board">
-        <strong>Code Suggestions:</strong>
-        <div id="suggestions">(waiting for input...)</div>
-      </div>
       <div id="learning-updates">
         <strong>Self-Learning Updates:</strong>
         <div id="updates">(monitoring model feedback...)</div>
+      </div>
+      <div id="pin-board">
+        <strong>Code Suggestions:</strong>
+        <div id="suggestions">(waiting for input...)</div>
       </div>
     </section>
     <aside id="circle-visual">
@@ -179,7 +185,6 @@
   <img id="brain-map" src="/images/brain.png" alt="Brain Area Map" />
   <button id="return">← Main Page</button>
 
-  <!-- 🔗 JavaScript: conecta com main.js -->
   <script type="module">
     import { sendMessage } from './modules/agi_core/main.js';
     document.getElementById('sendBtn').onclick = sendMessage;

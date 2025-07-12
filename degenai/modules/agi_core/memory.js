@@ -1,5 +1,6 @@
 // File: modules/agi_core/memory.js
-import { db, collection, addDoc } from './firebase.js';
+import { db, collection, addDoc, getDocs } from './firebase.js';
+import { trainSamFormer, querySamFormer } from './samformer.js';
 
 // ——— Estado em memória ———
 let sessionHistory = [];
@@ -8,7 +9,7 @@ let profileId = null;
 let topWordsArr = [];
 let processedQueries = new Set();
 
-// Configura Self-Learning Updates (barra de rolagem, máximo 10 entries)
+// Configura Self-Learning Updates
 function setupUpdatesWindow() {
   document.addEventListener('DOMContentLoaded', () => {
     const updatesDiv = document.getElementById('updates');
@@ -21,6 +22,31 @@ function setupUpdatesWindow() {
   });
 }
 setupUpdatesWindow();
+
+// ——— Inicializa Treino Periódico ———
+// A cada X interações ou intervalo, re-treina o modelo com os dados do corpus
+async function periodicTraining() {
+  try {
+    // obtém todos os documentos do corpus
+    const snap = await getDocs(collection(db, 'corpus'));
+    const trainingData = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      trainingData.push({
+        input: d.userText || d.surpriseSummary,
+        output: d.botReply || d.surpriseSummary
+      });
+    });
+    if (trainingData.length) {
+      await trainSamFormer(trainingData, profileId);
+    }
+  } catch (err) {
+    console.error('Erro no treino periódico:', err);
+  }
+}
+// treina inicialmente e depois a cada 5 min
+periodicTraining();
+setInterval(periodicTraining, 5 * 60_000);
 
 // ——— Função principal ———
 export async function saveInteraction(userText, botReply) {
@@ -46,14 +72,15 @@ export async function saveInteraction(userText, botReply) {
 
   // 4) Grava nos 4 gates
   await Promise.all([
-    addDoc(collection(db, 'conversations'), { profileId, userText, botReply, timestamp }),
-    addDoc(collection(db, 'corpus'),        { profileId, userText, botReply, tokens, timestamp }),
-    addDoc(collection(db, 'event_gates'),   { profileId, eventType: 'interaction', data: { userText, botReply }, timestamp })
-    // profiles já foi criado em saveProfile
+    addDoc(collection(db, 'conversations'),    { profileId, userText, botReply, timestamp }),
+    addDoc(collection(db, 'corpus'),             { profileId, userText, botReply, tokens, timestamp }),
+    addDoc(collection(db, 'event_gates'),        { profileId, eventType: 'interaction', data: { userText, botReply }, timestamp })
+    // profiles criado em saveProfile
   ]);
 
-  // 5) Persiste localmente
-  saveToMemory();
+  // 5) Atualiza respostas via SamFormer e exibe
+  const learnedReply = await querySamFormer(userText, profileId);
+  return learnedReply;
 }
 
 // ——— Cria o documento de perfil no Firestore ———
@@ -67,58 +94,11 @@ async function saveProfile() {
   exportProfileToLocalStorage();
 }
 
-// ——— Fator Surpresa ———
-async function runSurprise() {
-  if (!sessionHistory.length) return;
-  const idx = Math.floor(Math.random() * sessionHistory.length);
-  const query = sessionHistory[idx].user;
-  if (processedQueries.has(query)) return;
-  processedQueries.add(query);
-
-  try {
-    const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json`);
-    const data = await res.json();
-    const summary = data.AbstractText || (data.RelatedTopics[0] && data.RelatedTopics[0].Text) || '';
-    if (!summary) return;
-
-    const timestamp = new Date();
-    // salva no corpus
-    await addDoc(collection(db, 'corpus'), {
-      profileId, userText: query, surpriseSummary: summary, source: 'duckduckgo', timestamp
-    });
-
-    // se contiver data, salva em event_gates
-    const datePattern = /\d{4}-\d{2}-\d{2}/;
-    const monthNames = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/;
-    if (datePattern.test(summary) || monthNames.test(summary)) {
-      await addDoc(collection(db, 'event_gates'), {
-        profileId, eventType: 'surpriseEvent', data: { query, summary }, timestamp
-      });
-    }
-
-    // Exibe no Self-Learning Updates
-    const updatesDiv = document.getElementById('updates');
-    if (updatesDiv) {
-      const entry = document.createElement('div');
-      entry.textContent = `Pesquisado: "${query}" → Aprendizado: ${summary}`;
-      updatesDiv.prepend(entry);
-      // Limita a 10 registros
-      while (updatesDiv.children.length > 10) {
-        updatesDiv.removeChild(updatesDiv.lastChild);
-      }
-    }
-  } catch (err) {
-    console.error('Surprise factor error:', err);
-  }
-}
-
-// inicia o fator surpresa a cada 60s sem recarregar página
-setInterval(runSurprise, 60_000);
-
 // ——— Persistência local ———
 export function saveToMemory() {
   localStorage.setItem('sessionHistory', JSON.stringify(sessionHistory));
 }
+
 export function loadMemory() {
   const raw = localStorage.getItem('sessionHistory');
   sessionHistory = raw ? JSON.parse(raw) : [];
@@ -129,6 +109,7 @@ export function exportProfileToLocalStorage() {
   if (!profileId) return;
   localStorage.setItem('userProfile', JSON.stringify({ profileId, topWords: topWordsArr }));
 }
+
 export function loadProfileFromStorage() {
   const raw = localStorage.getItem('userProfile');
   if (!raw) return;
