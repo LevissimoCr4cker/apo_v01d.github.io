@@ -5,26 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>apo_v01d :: Degen AI</title>
   <style>
+    /* Unchanged CSS */
     body {
       margin: 0;
-      font-family: monospace, sans-serif;
+      font-family: 'Ubuntu Mono', monospace;
       background: #000;
-      color: #fff;
+      color: #0f0;
       display: flex;
       flex-direction: column;
       height: 100vh;
+      overflow: hidden;
+      background-image: linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 20px 20px;
     }
     header {
       display: flex;
       align-items: center;
       padding: 0.5rem 1rem;
-      background-color: #111;
-      color: white;
+      background: #111;
+      color: #0ff;
+      text-shadow: 0 0 5px #0ff;
     }
     #logo {
       font-weight: bold;
       font-size: 0.9rem;
-      opacity: 0.4;
+      opacity: 0.7;
+      letter-spacing: 2px;
     }
     main {
       flex: 1;
@@ -39,13 +46,26 @@
     }
     #chatbox {
       flex: 1;
-      border: 1px solid #333;
       padding: 1rem;
       overflow-y: auto;
-      background: #000;
-      color: #fff;
+      background: rgba(0, 0, 0, 0.9);
+      color: #0f0;
       max-height: 300px;
       white-space: pre-wrap;
+      box-shadow: inset 0 0 10px #0ff, 0 0 20px #0ff;
+      border: 1px solid #0ff;
+      position: relative;
+    }
+    .message.user { color: #0ff; }
+    .message.ai { color: #f0f; }
+    .self-talk { color: #ff0; font-style: italic; }
+    .glow {
+      animation: pulse 1.5s ease-out;
+    }
+    @keyframes pulse {
+      0% { box-shadow: inset 0 0 10px #0ff, 0 0 20px #0ff; }
+      50% { box-shadow: inset 0 0 20px #0ff, 0 0 40px #0ff; }
+      100% { box-shadow: inset 0 0 10px #0ff, 0 0 20px #0ff; }
     }
     #input-area {
       display: flex;
@@ -55,48 +75,50 @@
       flex: 1;
       padding: 0.5rem;
       font-size: 1rem;
-      background: #111;
-      border: 1px solid #444;
-      color: #f0f0f0;
+      background: transparent;
+      border: 1px solid #0ff;
+      color: #0f0;
+      font-family: 'Ubuntu Mono', monospace;
+      text-shadow: 0 0 5px #0ff;
     }
     #input-area button {
       padding: 0.5rem 1rem;
-      background: #222;
-      color: white;
-      border: none;
+      background: transparent;
+      border: 1px solid #0ff;
+      color: #0ff;
       cursor: pointer;
+      font-family: 'Ubuntu Mono', monospace;
+      text-shadow: 0 0 5px #0ff;
     }
-    #learning-updates {
+    #input-area button:hover {
+      background: #0ff;
+      color: #000;
+    }
+    #thoughts, #learning-updates, #pin-board {
       padding: 1rem;
-      border-top: 1px solid #444;
-      background: #000;
-      min-height: 100px;
+      background: transparent;
+      color: #0ff;
+      min-height: 80px;
+      max-height: 120px;
       overflow-y: auto;
-      max-height: 150px;
-      color: #fff;
+      text-shadow: 0 0 5px #0ff;
     }
-    #pin-board {
-      padding: 1rem;
-      border-top: 1px solid #444;
-      background: #000;
-      min-height: 100px;
-      overflow-y: auto;
-      max-height: 150px;
-      color: #fff;
-    }
+    #thoughts { color: #ff0; font-style: italic; }
+    #learning-updates { color: #0f0; }
+    #pin-board { color: #f0f; }
     #circle-visual {
       flex: 1;
       padding: 1rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-      position: relative;
+      background: transparent;
     }
     .circle-box {
       width: 90%;
       max-width: 300px;
       aspect-ratio: 1 / 1;
-      border: 2px solid #555;
+      border: 1px solid #0ff;
       border-radius: 50%;
       display: flex;
       justify-content: center;
@@ -104,41 +126,53 @@
       font-weight: bold;
       text-align: center;
       margin-bottom: 1rem;
-      background-color: #000;
-      color: #fff;
-      position: relative;
+      background: transparent;
+      color: #0ff;
+      text-shadow: 0 0 5px #0ff;
     }
     .circle-label {
       position: absolute;
       right: 1rem;
       top: 0.5rem;
       font-size: 0.75rem;
-      color: #aaa;
+      color: #0ff;
+      text-shadow: 0 0 3px #0ff;
     }
     .brain-label {
       position: absolute;
       right: 1rem;
       bottom: 4.5rem;
       font-size: 0.75rem;
-      color: #aaa;
+      color: #0ff;
+      text-shadow: 0 0 3px #0ff;
     }
-    #brain-map {
+    #brain-container {
       position: absolute;
       bottom: 2rem;
       right: 1rem;
-      width: 100px;
-      opacity: 0.4;
+      width: 150px;
+      height: 150px;
+    }
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
     }
     #return {
       position: fixed;
       bottom: 0.5rem;
       right: 1rem;
       background: transparent;
-      border: 1px solid white;
+      border: 1px solid #0ff;
       padding: 0.3rem 0.8rem;
-      color: white;
+      color: #0ff;
       cursor: pointer;
       font-size: 0.8rem;
+      font-family: 'Ubuntu Mono', monospace;
+      text-shadow: 0 0 5px #0ff;
+    }
+    #return:hover {
+      background: #0ff;
+      color: #000;
     }
     @media (max-width: 768px) {
       main {
@@ -148,18 +182,38 @@
         order: -1;
       }
     }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 255, 255, 0.02),
+        rgba(0, 255, 255, 0.02) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <header>
-    <div id="logo">apo_v01d</div>
+    <div id="logo">apo_v01d@degen-ai:~$</div>
   </header>
   <main>
     <section id="chat-section">
       <div id="chatbox"></div>
       <div id="input-area">
-        <input type="text" id="message" placeholder="Type your message..." />
-        <button id="sendBtn">Send</button>
+        <input type="text" id="message" placeholder="type your command..." />
+        <button id="sendBtn">execute</button>
+      </div>
+      <div id="thoughts">
+        <strong>Thoughts:</strong>
+        <div id="inner-thoughts">(internal monologue...)</div>
       </div>
       <div id="learning-updates">
         <strong>Self-Learning Updates:</strong>
@@ -176,18 +230,63 @@
         <div class="circle-label">conscience</div>
       </div>
       <div class="circle-box">
-        Brain Activity Map
+        <div id="brain-container"></div>
         <div class="circle-label">mood</div>
       </div>
     </aside>
   </main>
   <div class="brain-label">iq / activity</div>
-  <img id="brain-map" src="/images/brain.png" alt="Brain Area Map" />
   <button id="return">← Main Page</button>
 
   <script type="module">
-    import { sendMessage } from './modules/agi_core/main.js';
-    document.getElementById('sendBtn').onclick = sendMessage;
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.module.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.154.0/examples/jsm/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.154.0/examples/jsm/controls/OrbitControls.js';
+    import './modules/agi_core/main.js'; // Import main.js
+
+    const container = document.getElementById('brain-container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xffffff, 0.5);
+    pointLight.position.set(5, 5, 5);
+    scene.add(pointLight);
+
+    let brain;
+    const loader = new GLTFLoader();
+    loader.load('/models/brain.glb', (gltf) => {
+      brain = gltf.scene;
+      brain.traverse(child => {
+        if (child.isMesh) {
+          child.material.transparent = true;
+          child.material.opacity = 0.6;
+          child.material.emissive.setHex(0x2200ff);
+        }
+      });
+      brain.scale.set(0.5, 0.5, 0.5);
+      brain.position.set(0, 0, 0);
+      scene.add(brain);
+    }, undefined, (error) => {
+      console.error('Error loading brain.glb:', error);
+    });
+
+    camera.position.z = 3;
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableZoom = false;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (brain) {
+        brain.rotation.y += 0.005;
+      }
+      renderer.render(scene, camera);
+    }
+    animate();
   </script>
 </body>
 </html>
