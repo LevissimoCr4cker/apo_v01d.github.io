@@ -1,35 +1,25 @@
 // File: modules/agi_core/memory.js
-import { db, collection, addDoc } from './firebase.js';
+import { db } from './firebase.js';
+import { collection, addDoc } from 'firebase/firestore';
 
-// ========== Utility: Tokenize user input (optional enhancement) ==========
-function tokenize(text) {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s]/g, '')
-    .split(/\s+/)
-    .filter(Boolean);
-}
-
-// ========== Firebase: Save user input ==========
+// ========== Save user message ==========
 async function saveUserInput(text) {
-  const shortRef = collection(db, 'short');
   try {
-    await addDoc(shortRef, {
-      original: text,
-      tokens: tokenize(text),
+    await addDoc(collection(db, 'short'), {
+      message: text,
       timestamp: Date.now()
     });
-    console.log('🧠 Saved to /short:', text); // debug
+    console.log('✅ Saved message to /short:', text);
   } catch (err) {
-    console.error('❌ Error saving user input to Firebase:', err);
+    console.error('❌ Error saving to Firestore:', err);
   }
 }
 
-// ========== Core: Watch Chatbox for User Inputs ==========
+// ========== Monitor chat for user messages ==========
 function observeChatbox() {
   const chatbox = document.getElementById('chatbox');
   if (!chatbox) {
-    console.warn('⚠️ chatbox element not found.');
+    console.warn('⚠️ chatbox not found.');
     return;
   }
 
@@ -38,8 +28,8 @@ function observeChatbox() {
       for (const node of mutation.addedNodes) {
         if (node.nodeType === Node.ELEMENT_NODE) {
           const el = node;
-          if (el.classList.contains('user')) {
-            const text = el.textContent.replace(/^\s*🧍 you:\s*/, '').trim();
+          if (el.classList.contains('message') && el.classList.contains('user')) {
+            const text = el.textContent.trim();
             if (text.length > 0) {
               saveUserInput(text);
             }
@@ -52,7 +42,7 @@ function observeChatbox() {
   observer.observe(chatbox, { childList: true, subtree: true });
 }
 
-// ========== Start Listening on Page Load ==========
+// ========== Start when ready ==========
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', observeChatbox);
 } else {
