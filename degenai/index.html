@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>apo_v01d :: Degen AI</title>
   <style>
-    /* Unchanged CSS */
+    /* CSS */
     body {
       margin: 0;
       font-family: 'Ubuntu Mono', monospace;
@@ -52,7 +52,6 @@
       color: #0f0;
       max-height: 300px;
       white-space: pre-wrap;
-      box-shadow: inset 0 0 10px #0ff, 0 0 20px #0ff;
       border: 1px solid #0ff;
       position: relative;
     }
@@ -209,7 +208,7 @@
       <div id="chatbox"></div>
       <div id="input-area">
         <input type="text" id="message" placeholder="type your command..." />
-        <button id="sendBtn">execute</button>
+        <button id="sendBtn">send</button>
       </div>
       <div id="thoughts">
         <strong>Thoughts:</strong>
@@ -236,57 +235,9 @@
     </aside>
   </main>
   <div class="brain-label">iq / activity</div>
-  <button id="return">← Main Page</button>
+  <a id="return" href="/index.html">← Main Page</a>
 
-  <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.module.js';
-    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.154.0/examples/jsm/loaders/GLTFLoader.js';
-    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.154.0/examples/jsm/controls/OrbitControls.js';
-    import './modules/agi_core/main.js'; // Import main.js
+ <script type="module" src="./modules/agi_core/main.js"></script>
 
-    const container = document.getElementById('brain-container');
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    container.appendChild(renderer.domElement);
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    const pointLight = new THREE.PointLight(0xffffff, 0.5);
-    pointLight.position.set(5, 5, 5);
-    scene.add(pointLight);
-
-    let brain;
-    const loader = new GLTFLoader();
-    loader.load('/models/brain.glb', (gltf) => {
-      brain = gltf.scene;
-      brain.traverse(child => {
-        if (child.isMesh) {
-          child.material.transparent = true;
-          child.material.opacity = 0.6;
-          child.material.emissive.setHex(0x2200ff);
-        }
-      });
-      brain.scale.set(0.5, 0.5, 0.5);
-      brain.position.set(0, 0, 0);
-      scene.add(brain);
-    }, undefined, (error) => {
-      console.error('Error loading brain.glb:', error);
-    });
-
-    camera.position.z = 3;
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableZoom = false;
-
-    function animate() {
-      requestAnimationFrame(animate);
-      if (brain) {
-        brain.rotation.y += 0.005;
-      }
-      renderer.render(scene, camera);
-    }
-    animate();
-  </script>
 </body>
 </html>

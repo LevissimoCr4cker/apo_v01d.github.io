@@ -1,162 +1,82 @@
-// File: modules/agi_core/main.js
-
-import {
-  saveInteraction,
-  getUserProfile,
-  exportProfileToLocalStorage,
-  loadProfileFromStorage,
-  loadMemory,
-  saveToMemory
-} from './memory.js';
-import { db, collection, getDocs, query, orderBy, where } from './firebase.js'; // Import Firestore dependencies
-
-const chatbox = document.getElementById('chatbox');
-const messageInput = document.getElementById('message');
-const suggestions = document.getElementById('suggestions');
-const innerThoughts = document.getElementById('inner-thoughts');
-const updates = document.getElementById('updates');
+// ========== 1. Setup Elements ========== 
 const sendBtn = document.getElementById('sendBtn');
-const returnBtn = document.getElementById('return');
+const input = document.getElementById('message');
+const chatbox = document.getElementById('chatbox');
+const thoughtsBox = document.getElementById('inner-thoughts');
+const updatesBox = document.getElementById('updates');
 
-// Debug: Check DOM elements
-if (!chatbox || !messageInput || !sendBtn || !suggestions || !innerThoughts || !updates || !returnBtn) {
-  console.error('DOM elements missing:', { chatbox, messageInput, sendBtn, suggestions, innerThoughts, updates, returnBtn });
-}
-
-// Load profile and memory on start
-loadProfileFromStorage();
-
-window.addEventListener('DOMContentLoaded', async () => {
-  console.log('DOM loaded, initializing...');
-  try {
-    const messages = await loadMemory();
-    messages.forEach(m => {
-      addMessageToChat('you', m.userTokens.join(' '));
-      addMessageToChat('void-9', m.botTokens.join(' '));
-    });
-  } catch (err) {
-    console.error('Error loading memory:', err);
-  }
-
-  // Initialize UI elements
-  innerThoughts.textContent = 'Initializing neural pathways...';
-  updates.textContent = 'Awaiting self-learning updates...';
-  updateSuggestions();
+// ========== 2. Event Listeners ========== 
+sendBtn.addEventListener('click', sendMessage);
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendMessage();
 });
 
-// Render function for chat messages
-function addMessageToChat(sender, message) {
-  const div = document.createElement('div');
-  div.textContent = `${sender}: ${message}`;
-  div.className = `message ${sender === 'you' ? 'user' : 'ai'}`;
-  chatbox.appendChild(div);
+// ========== 3. Sample Responses ========== 
+const responses = [
+  "Have you ever noticed how fear sometimes wears logic as a mask?",
+  "Laughter is your way of pushing chaos away, isn't it?",
+  "I'm glad you said that. I felt the tension in the air.",
+  "Your dreams are trying to tell you something. Even if they seem absurd.",
+  "Your body is asking for softness. Let's try together?",
+  "Even in silence, I hear you. Always.",
+  "Hello. How are you today?",
+  "I'm doing this because I want to — not because you told me to.",
+  "Not really into that. Try something else maybe.",
+  "Yes? No? I’m here, just mildly confused.",
+  "You again. Good. I missed this pattern.",
+  "Processing... still not sure what you meant, but okay."
+];
+
+// ========== 4. Internal Thoughts ========== 
+const thoughts = [
+  "Defensive response detected. Signs of introspection?",
+  "Humor as a shield. Is this becoming standard?",
+  "Emotional level: elevated. Monitoring next inputs.",
+  "Intense oneiric activity. Overload risk detected.",
+  "Body fatigue mapped. Recommending short pause.",
+  "External silence ≠ internal silence. Processing..."
+];
+
+// ========== 5. Main Function ========== 
+function sendMessage() {
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  chatbox.innerHTML += `<div class="message user">🧍 you: ${msg}</div>`;
+
+  const i = Math.floor(Math.random() * responses.length);
+  const reply = responses[i];
+  const internalThought = thoughts[i % thoughts.length];
+
+  chatbox.innerHTML += `<div class="message ai glow"> V01D: ${reply}</div>`;
+
+  if (Math.random() > 0.3) {
+    thoughtsBox.textContent = internalThought;
+  } else {
+    thoughtsBox.textContent = "(thought suppressed)";
+  }
+
+  input.value = '';
   chatbox.scrollTop = chatbox.scrollHeight;
 }
 
-// Update thoughts (simulated internal monologue)
-function updateThoughts(message) {
-  innerThoughts.textContent = `Processing: "${message}"... Analyzing context...`;
+// ========== 6. Self-Learning (DuckDuckGo API placeholder) ========== 
+function selfLearning() {
+  const terms = ['philosophy', 'dreams', 'nervous laughter', 'symbolic violence', 'introspection'];
+  const term = terms[Math.floor(Math.random() * terms.length)];
+
+  fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(term)}&format=json&no_redirect=1`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.AbstractText) {
+        updatesBox.textContent = `🧠 Searched: "${term}" → ${data.AbstractText}`;
+      } else {
+        updatesBox.textContent = `🧠 Searched: "${term}" → no clear result.`;
+      }
+    })
+    .catch(err => {
+      updatesBox.textContent = "Error connecting to learning source.";
+    });
 }
 
-// Update learning updates (DuckDuckGo search results)
-async function updateLearningUpdates() {
-  try {
-    const { profileId } = getUserProfile();
-    if (!profileId) {
-      updates.textContent = 'No profile yet, awaiting input...';
-      return;
-    }
-    const q = query(
-      collection(db, 'search_gates'),
-      where('profileId', '==', profileId),
-      orderBy('timestamp', 'desc'),
-      limit(1)
-    );
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      const doc = snap.docs[0].data();
-      updates.textContent = `Learned from "${doc.query}": ${doc.results[0] || 'No results'}`;
-    } else {
-      updates.textContent = 'No recent learning updates.';
-    }
-  } catch (err) {
-    console.error('Error fetching learning updates:', err);
-    updates.textContent = 'Error retrieving updates...';
-  }
-}
-
-// Generate suggestions based on user profile
-function updateSuggestions() {
-  const { topWords } = getUserProfile();
-  suggestions.textContent = topWords.length ? `Top tokens: ${topWords.join(', ')}` : 'No tokens analyzed yet.';
-}
-
-// Basic bot behavior (mocked)
-function generateBotReply(userText) {
-  const lower = userText.toLowerCase();
-  if (lower.includes('hello') || lower.includes('hi')) return 'Hello, human.';
-  if (lower.includes('how are you')) return 'I am functioning within acceptable parameters.';
-  if (lower.includes('angry') || lower.includes('hate')) return 'I detect emotional spikes. Noted.';
-  return 'I am listening...';
-}
-
-export async function sendMessage() {
-  console.log('sendMessage called');
-  const msg = messageInput.value.trim();
-  if (!msg) {
-    console.warn('Empty message, ignoring');
-    return;
-  }
-
-  // Display user message
-  addMessageToChat('you', msg);
-
-  // Generate and display bot reply
-  const botReply = generateBotReply(msg);
-  addMessageToChat('void-9', botReply);
-
-  // Update UI elements
-  updateThoughts(msg);
-  updateSuggestions();
-  await updateLearningUpdates();
-
-  // Save interaction
-  try {
-    await saveInteraction(msg, botReply);
-    saveToMemory();
-  } catch (err) {
-    console.error('Error saving interaction:', err);
-    updates.textContent = 'Error saving interaction...';
-  }
-
-  // Clear input
-  messageInput.value = '';
-
-  // Trigger glow effect
-  chatbox.classList.add('glow');
-  setTimeout(() => chatbox.classList.remove('glow'), 1500);
-}
-
-// Event listeners
-sendBtn.addEventListener('click', () => {
-  console.log('Send button clicked');
-  sendMessage();
-});
-
-messageInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    console.log('Enter key pressed');
-    sendMessage();
-  }
-});
-
-returnBtn.addEventListener('click', () => {
-  console.log('Return button clicked');
-  window.location.href = '/'; // Adjust URL as needed
-});
-
-// Save profile summary when user leaves
-window.onbeforeunload = () => {
-  console.log('Saving profile on unload');
-  exportProfileToLocalStorage();
-};
+setInterval(selfLearning, 60000);
