@@ -10,10 +10,28 @@ function tokenize(text) {
     .filter(Boolean);
 }
 
+// ========== Firebase: Save user input ==========
+async function saveUserInput(text) {
+  const shortRef = collection(db, 'short');
+  try {
+    await addDoc(shortRef, {
+      original: text,
+      tokens: tokenize(text),
+      timestamp: Date.now()
+    });
+    console.log('🧠 Saved to /short:', text); // debug
+  } catch (err) {
+    console.error('❌ Error saving user input to Firebase:', err);
+  }
+}
+
 // ========== Core: Watch Chatbox for User Inputs ==========
 function observeChatbox() {
   const chatbox = document.getElementById('chatbox');
-  if (!chatbox) return;
+  if (!chatbox) {
+    console.warn('⚠️ chatbox element not found.');
+    return;
+  }
 
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
@@ -34,19 +52,9 @@ function observeChatbox() {
   observer.observe(chatbox, { childList: true, subtree: true });
 }
 
-// ========== Firebase: Save user input ==========
-async function saveUserInput(text) {
-  const shortRef = collection(db, 'short');
-  try {
-    await addDoc(shortRef, {
-      original: text,
-      tokens: tokenize(text),
-      timestamp: Date.now()
-    });
-  } catch (err) {
-    console.error('Error saving user input to Firebase:', err);
-  }
-}
-
 // ========== Start Listening on Page Load ==========
-document.addEventListener('DOMContentLoaded', observeChatbox);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', observeChatbox);
+} else {
+  observeChatbox();
+}

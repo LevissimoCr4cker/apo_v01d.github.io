@@ -1,5 +1,5 @@
 // File: modules/agi_core/memory.js
-import { db, collection, addDoc, getDocs, query, where, deleteDoc } from './firebase.js';
+import { db, collection, addDoc, getDocs, query, where, deleteDoc } from '../../degenai/modules/agi_core/firebase.js';
 
 // ——— State memory ———
 let sessionHistory = [];
