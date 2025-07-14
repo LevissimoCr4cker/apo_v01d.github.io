@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Post Archive</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Georgia, serif;
+      background-color: white;
+      color: #111;
+      margin: 0;
+      padding: 0;
+      display: flex;
+    }
+
+    aside {
+      width: 220px;
+      padding: 2rem 1rem;
+      border-right: 1px solid #eee;
+      font-size: 0.9rem;
+    }
+
+    aside h3 {
+      font-weight: normal;
+      margin-bottom: 1rem;
+    }
+
+    aside ul {
+      padding-left: 0;
+      list-style: none;
+    }
+
+    aside li {
+      margin-bottom: 0.5rem;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-weight: normal;
+      font-size: 2.5rem;
+    }
+
+    nav a {
+      color: #06c;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      font-size: 1rem;
+      padding: 0.5rem;
+      margin: 1.5rem 0;
+    }
+
+    ul#posts {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    ul#posts li {
+      margin-bottom: 1.5rem;
+    }
+
+    .post-title {
+      font-size: 1.1rem;
+      color: #06c;
+      text-decoration: none;
+    }
+
+    .post-date {
+      display: block;
+      font-size: 0.8rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+  <aside>
+    <h3>Browse By Date</h3>
+    <ul>
+      <li>July 2025 (1)</li>
+      <li>June 2025 (1)</li>
+      <li>May 2025 (1)</li>
+      <li>2024 (3)</li>
+      <!-- Add more as needed -->
+    </ul>
+  </aside>
+
+  <main>
+    <h1>Sam Maple</h1>
+    <nav><a href="index.html">« Back to blog</a></nav>
+
+    <input type="text" id="search" placeholder="Search this site…">
+
+    <ul id="posts">
+      <li>
+        <a class="post-title" href="posts/2025-07-14-the-gentle-singularity.html">The Gentle Singularity</a>
+        <span class="post-date">JULY 14, 2025</span>
+      </li>
+      <li>
+        <a class="post-title" href="posts/2025-06-22-reflections.html">Reflections</a>
+        <span class="post-date">JUNE 22, 2025</span>
+      </li>
+      <!-- Add more posts here -->
+    </ul>
+  </main>
+
+  <script>
+    const search = document.getElementById('search');
+    const posts = document.querySelectorAll('#posts li');
+
+    search.addEventListener('input', () => {
+      const val = search.value.toLowerCase();
+      posts.forEach(post => {
+        const match = post.textContent.toLowerCase().includes(val);
+        post.style.display = match ? 'block' : 'none';
+      });
+    });
+  </script>
+
+</body>
+</html>
