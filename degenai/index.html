@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>apo_v01d :: Degen AI</title>
   <style>
-    /* CSS */
     body {
       margin: 0;
       font-family: 'Ubuntu Mono', monospace;
@@ -237,7 +236,9 @@
   <div class="brain-label">iq / activity</div>
   <a id="return" href="/index.html">← Main Page</a>
 
- <script type="module" src="./modules/agi_core/main.js"></script>
-
+  <!-- Load scripts as ES modules -->
+  <script type="module" src="./modules/agi_core/memory/firebase.js"></script>
+  <script type="module" src="./modules/agi_core/memory/memory.js"></script>
+  <script type="module" src="./modules/agi_core/main.js"></script>
 </body>
 </html>
