@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Thoughts Archive</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Georgia, serif;
+      max-width: 900px;
+      margin: 2rem auto;
+      background-color: #fff;
+      color: #111;
+    }
+    h1 { font-size: 2.5rem; }
+    nav a { margin-right: 1rem; color: #06c; text-decoration: none; }
+    ul { list-style: none; padding: 0; }
+    li { margin-bottom: 1.2rem; }
+    .post-title { font-size: 1.2rem; color: #06c; text-decoration: none; }
+    .post-date { font-size: 0.85rem; color: #888; }
+    input[type="text"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Sam Maple</h1>
+    <nav>
+      <a href="index.html">← Back to blog</a>
+    </nav>
+  </header>
+
+  <input type="text" id="search" placeholder="Search this site...">
+
+  <ul id="post-list">
+    <li>
+      <a class="post-title" href="posts/2025-07-14-the-gentle-singularity.html">The Gentle Singularity</a><br>
+      <span class="post-date">JULY 14, 2025</span>
+    </li>
+    <li>
+      <a class="post-title" href="posts/2025-06-22-reflections.html">Reflections</a><br>
+      <span class="post-date">JUNE 22, 2025</span>
+    </li>
+    <!-- Adicione mais aqui -->
+  </ul>
+
+  <script>
+    const search = document.getElementById("search");
+    const posts = document.querySelectorAll("#post-list li");
+
+    search.addEventListener("input", () => {
+      const val = search.value.toLowerCase();
+      posts.forEach(post => {
+        const title = post.textContent.toLowerCase();
+        post.style.display = title.includes(val) ? "block" : "none";
+      });
+    });
+  </script>
+
+</body>
+</html>
