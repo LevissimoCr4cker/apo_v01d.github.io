@@ -2,65 +2,76 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Thoughts Archive</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>The Gentle Singularity</title>
+  <link rel="stylesheet" href="../style.css" />
   <style>
     body {
       font-family: Georgia, serif;
-      max-width: 900px;
-      margin: 2rem auto;
-      background-color: #fff;
+      background: #fff;
       color: #111;
+      margin: 0;
+      padding: 0;
+      display: flex;
     }
-    h1 { font-size: 2.5rem; }
-    nav a { margin-right: 1rem; color: #06c; text-decoration: none; }
-    ul { list-style: none; padding: 0; }
-    li { margin-bottom: 1.2rem; }
-    .post-title { font-size: 1.2rem; color: #06c; text-decoration: none; }
-    .post-date { font-size: 0.85rem; color: #888; }
-    input[type="text"] {
-      padding: 0.5rem;
-      font-size: 1rem;
-      width: 100%;
+
+    aside {
+      width: 220px;
+      padding: 2rem 1rem;
+      border-right: 1px solid #eee;
+      font-size: 0.9rem;
+      color: #444;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 750px;
+    }
+
+    h1 {
+      font-weight: normal;
+      font-size: 2.2rem;
+      margin-bottom: 0.2rem;
+    }
+
+    a {
+      color: #06c;
+      text-decoration: none;
+    }
+
+    .post-date {
+      font-size: 0.85rem;
+      color: #888;
       margin-bottom: 2rem;
+      display: block;
+    }
+
+    p {
+      line-height: 1.7;
+      margin-bottom: 1.4rem;
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>Sam Maple</h1>
-    <nav>
-      <a href="index.html">← Back to blog</a>
-    </nav>
-  </header>
+  <aside>
+    <h2>Sam Maple</h2>
+    <p><a href="../obsidian.html">← Back to blog</a></p>
+    <p><span class="post-date">July 14, 2025<br>at 6:12 PM</span></p>
+  </aside>
 
-  <input type="text" id="search" placeholder="Search this site...">
+  <main>
+    <h1>The Gentle Singularity</h1>
+    <span class="post-date">JULY 14, 2025</span>
 
-  <ul id="post-list">
-    <li>
-      <a class="post-title" href="posts/2025-07-14-the-gentle-singularity.html">The Gentle Singularity</a><br>
-      <span class="post-date">JULY 14, 2025</span>
-    </li>
-    <li>
-      <a class="post-title" href="posts/2025-06-22-reflections.html">Reflections</a><br>
-      <span class="post-date">JUNE 22, 2025</span>
-    </li>
-    <!-- Adicione mais aqui -->
-  </ul>
+    <p>We are past the event horizon; the takeoff has started. Humanity is close to building digital superintelligence, and at least so far it’s much less weird than it seems like it should be.</p>
 
-  <script>
-    const search = document.getElementById("search");
-    const posts = document.querySelectorAll("#post-list li");
+    <p>Robots are not yet walking the streets, nor are most of us talking to AI all day. People still die of disease, we still can’t easily go to space, and there is a lot about the universe we don’t understand.</p>
 
-    search.addEventListener("input", () => {
-      const val = search.value.toLowerCase();
-      posts.forEach(post => {
-        const title = post.textContent.toLowerCase();
-        post.style.display = title.includes(val) ? "block" : "none";
-      });
-    });
-  </script>
+    <p>And yet, we have recently built systems that are smarter than people in many ways, and are able to significantly amplify the output of people using them. The least-likely part of the work is behind us; the scientific insights that got us to systems like GPT-4 and o3 were hard-won, but will take us very far.</p>
+
+    <p>AI will contribute to the world in many ways, but the gains to quality of life from AI driving faster scientific progress and increased productivity will be enormous; the future can be vastly better than the present. Scientific progress is the biggest driver of overall progress; it’s hugely exciting to think about how much more we could have.</p>
+  </main>
 
 </body>
 </html>
