@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V01D Chat</title>
+    <link rel="stylesheet" href="style.css">
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>apo_v01d :: Degen AI</title>
@@ -236,25 +242,14 @@
   <div class="brain-label">iq / activity</div>
   <a id="return" href="/index.html">← Main Page</a>
 
-   <!-- Firebase CDN -->
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: 'AIzaSyC5UwHcpJwQ8VxaSfOoQl2TxzC5ahN3NmU',
-      authDomain: 'betocaino-c8553.firebaseapp.com',
-      databaseURL: 'https://betocaino-c8553-default-rtdb.firebaseio.com',
-      projectId: 'betocaino-c8553',
-      storageBucket: 'betocaino-c8553.appspot.com',
-      messagingSenderId: '509923845167',
-      appId: '1:509923845167:web:9cb187aa52fbe367c892da',
-      measurementId: 'G-7KV4X39C60',
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
-  <script src="modules/agi_core/main.js"></script>
-  <script src="modules/agi_core/memory/memory.js"></script>
+  <!-- Firebase SDKs -->
+  <script type="module" src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/9.6.0/firebase-analytics.js"></script>
+
+  <!-- Your scripts -->
+  <script type="module" src="modules/agi_core/firebase-init.js"></script>
+  <script type="module" src="modules/agi_core/memory.js"></script>
+  <script type="module" src="modules/agi_core/main.js"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 // File: modules/agi_core/main.js
+
 // Setup Elements
 const sendBtn = document.getElementById('sendBtn');
 const input = document.getElementById('message');
@@ -56,20 +57,17 @@ function sendMessage() {
   // Update thoughts
   thoughtsBox.textContent = Math.random() > 0.3 ? internalThought : '(thought suppressed)';
 
-  // Store message using memory.js
-  storeMessage(msg).catch((error) => {
-    console.error('Failed to store message:', error);
-    updatesBox.textContent = 'Error saving message to Firebase.';
-  });
-
+  // Clear input field
   input.value = '';
   chatbox.scrollTop = chatbox.scrollHeight;
 }
 
 // Event Listeners
-sendBtn.addEventListener('click', sendMessage);
-input.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') sendMessage();
+window.addEventListener('DOMContentLoaded', () => {
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
 });
 
 // Self-Learning (DuckDuckGo API)
