@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getDatabase } from 'firebase/database';
 import { getAnalytics } from 'firebase/analytics';
+import { getStorage } from 'firebase/storage'; // Add Storage
 
 const firebaseConfig = {
   apiKey: 'AIzaSyC5UwHcpJwQ8VxaSfOoQl2TxzC5ahN3NmU',
@@ -16,8 +17,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const rtdb = getDatabase(app);
+const db = getFirestore(app); // Firestore for whole sentences
+const rtdb = getDatabase(app); // Realtime Database for tokenized versions
 const analytics = getAnalytics(app);
+const storage = getStorage(app); // Storage for chat messages
 
-export { db, rtdb, analytics };
+export { db, rtdb, analytics, storage };

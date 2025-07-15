@@ -56,6 +56,12 @@ function sendMessage() {
   // Update thoughts
   thoughtsBox.textContent = Math.random() > 0.3 ? internalThought : '(thought suppressed)';
 
+  // Store message using memory.js
+  storeMessage(msg).catch((error) => {
+    console.error('Failed to store message:', error);
+    updatesBox.textContent = 'Error saving message to Firebase.';
+  });
+
   input.value = '';
   chatbox.scrollTop = chatbox.scrollHeight;
 }

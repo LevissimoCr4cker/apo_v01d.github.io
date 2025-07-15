@@ -236,9 +236,25 @@
   <div class="brain-label">iq / activity</div>
   <a id="return" href="/index.html">← Main Page</a>
 
-  <!-- Load scripts as ES modules -->
-  <script type="module" src="./modules/agi_core/memory/firebase.js"></script>
-  <script type="module" src="./modules/agi_core/memory/memory.js"></script>
-  <script type="module" src="./modules/agi_core/main.js"></script>
+   <!-- Firebase CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: 'AIzaSyC5UwHcpJwQ8VxaSfOoQl2TxzC5ahN3NmU',
+      authDomain: 'betocaino-c8553.firebaseapp.com',
+      databaseURL: 'https://betocaino-c8553-default-rtdb.firebaseio.com',
+      projectId: 'betocaino-c8553',
+      storageBucket: 'betocaino-c8553.appspot.com',
+      messagingSenderId: '509923845167',
+      appId: '1:509923845167:web:9cb187aa52fbe367c892da',
+      measurementId: 'G-7KV4X39C60',
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  <script src="modules/agi_core/main.js"></script>
+  <script src="modules/agi_core/memory/memory.js"></script>
 </body>
 </html>
