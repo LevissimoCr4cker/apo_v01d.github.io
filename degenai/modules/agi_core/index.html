@@ -62,24 +62,25 @@
     <a id="return" href="/index.html">← Main Page</a>
 
     <!-- Firebase SDK (Modular) -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
-        import { getDatabase } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js';
-        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics.js';
+ <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
+    import { getDatabase } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js';
+    import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics.js';
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAB7LzrjmNv-M_VZfBBORm_WzVOOM-8RMg",
-            authDomain: "deg2-329bc.firebaseapp.com",
-            projectId: "deg2-329bc",
-            storageBucket: "deg2-329bc.firebasestorage.app",
-            messagingSenderId: "581941379393",
-            appId: "1:581941379393:web:cbb90610c9a22e931d21c0",
-            measurementId: "G-6W8WZYFH8X"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyAB7LzrjmNv-M_VZfBBORm_WzVOOM-8RMg",
+        authDomain: "deg2-329bc.firebaseapp.com",
+        projectId: "deg2-329bc",
+        storageBucket: "deg2-329bc.firebasestorage.app",
+        messagingSenderId: "581941379393",
+        appId: "1:581941379393:web:cbb90610c9a22e931d21c0",
+        measurementId: "G-6W8WZYFH8X",
+        databaseURL: "https://deg2-329bc-default-rtdb.firebaseio.com/"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-    </script>
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+</script>
 
     <!-- Seus scripts -->
     <script src="modules/agi_core/main.js"></script>
