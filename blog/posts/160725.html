@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>life.js</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    body {
+      font-family: Georgia, serif;
+      background: #fff;
+      color: #111;
+      margin: 0;
+      padding: 0;
+      display: flex;
+    }
+
+    aside {
+      width: 220px;
+      padding: 2rem 1rem;
+      border-right: 1px solid #eee;
+      font-size: 0.9rem;
+      color: #444;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 750px;
+    }
+
+    h1 {
+      font-weight: normal;
+      font-size: 2.2rem;
+      margin-bottom: 0.2rem;
+    }
+
+    a {
+      color: #06c;
+      text-decoration: none;
+    }
+
+    .post-date {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 2rem;
+      display: block;
+    }
+
+    p {
+      line-height: 1.7;
+      margin-bottom: 1.4rem;
+    }
+  </style>
+</head>
+<body>
+
+  <aside>
+    <h2>post</h2>
+    <p><a href="../obsidian.html">← Back to blog</a></p>
+    <p><span class="post-date">July 14, 2025<br>at 10:28 PM</span></p>
+  </aside>
+
+  <main>
+    <h1>life.js</h1>
+    <span class="post-date">JULY 16, 2025</span>
+
+    
+
+  
+<p> // life.js </p>
+
+  <p> // A simulation of life.</p>
+
+  <p> // This code is a playful take on the complexities of existence, wrapped in a simple JavaScript structure.</p>
+
+  <pre><code>
+
+#include < iostream>
+#include < string>
+#include < vector>
+#include < cstdlib>
+#include < ctime>
+#include < utility>
+
+using namespace std;
+
+class Life {
+public:
+    bool alive;
+    int energy;
+    bool hungry;
+    bool food;
+    int money;
+    float dopamine;
+    vector<string> thoughts;
+    vector<pair<int,int>> avoidancePlaces;
+
+    Life() : alive(true), energy(100), hungry(true), food(false), money(0), dopamine(0.5f) {
+        thoughts.push_back("Where am I?");
+        srand(time(0));
+    }
+
+    void exist() {
+        wake(4); // wake at 4am
+        while (alive) {
+            work();
+            think();
+            act();
+            if (energy <= 0) rest();
+        }
+    }
+
+    void wake(int hour) {
+        cout << "Waking up at " << hour << "am..." << endl;
+        if (hungry) {
+            if (food) {
+                eat();
+            } else {
+                if (money == 0) {
+                    cout << "buy(food) failed — money = 0" << endl;
+                    work();
+                } else {
+                    cout << "buy(food)" << endl;
+                    food = true;
+                    money -= 10;
+                    eat();
+                }
+            }
+        } else {
+            cout << "Not hungry, skipping meal." << endl;
+        }
+    }
+
+    void eat() {
+        cout << "eat()" << endl;
+        hungry = false;
+        energy += 20;
+    }
+
+    void work() {
+        cout << "<p>working()...</p>" << endl;
+
+        bool needMoreDopamine = dopamine < 0.3f;
+        bool needMoreMoney = money < 20;
+        bool marketUncertaintyHigh = rand() % 2;
+
+        float gambleFactor = 1.0f;
+
+        if (needMoreDopamine && needMoreMoney) {
+            cout << "increasing gambling — chasing dopamine & money</" << endl;
+            gambleFactor += 1.5f;
+        }
+
+        if (marketUncertaintyHigh) {
+            cout << " uncertain — prioritizing safety" << endl;
+            gambleFactor -= 0.5f;
+            if (gambleFactor < 1.0f) gambleFactor = 1.0f;
+        }
+
+        int baseGain = static_cast<int>((dopamine + 0.5f) * 10);
+        int gain = static_cast<int>(baseGain * gambleFactor);
+
+        money += gain;
+        dopamine -= 0.1f;
+        if (dopamine < 0) dopamine = 0;
+
+        cout << "earned: $" << gain << ", money now: $" << money << ", gamble factor: " << gambleFactor << " << endl;
+    }
+
+    void think() {
+        string newThought = "Why is everything shaped like a loop?";
+        thoughts.push_back(newThought);
+        cout << "thinking: " << newThought << endl;
+        energy -= 5;
+    }
+
+    void act() {
+        int action = rand() % 5;
+        switch (action) {
+            case 0:
+                cout << "paint()" << endl;
+                dopamine += 0.2f;
+                break;
+            case 1:
+                cout << "work()" << endl;
+                work();
+                break;
+            case 2:
+                cout << "walk()" << endl;
+                energy -= 5;
+                dopamine += 0.1f;
+
+                // Encounter a person
+                cout << "encounter(person)" << endl;
+                bool friendly = rand() % 2;
+                if (friendly) {
+                    cout << "small_talk()" << endl;
+                    dopamine += 0.1f;
+                } else {
+                    cout << "threat detected — run() to safety" << endl;
+                    energy -= 10;
+                    dopamine -= 0.2f;
+                    // record avoidance coordinates
+                    int x = rand() % 100;
+                    int y = rand() % 100;
+                    avoidancePlaces.emplace_back(x, y);
+                    cout << "avoidancePlaces added: (" << x << "," << y << ")" << endl;
+                }
+                break;
+            case 3:
+                cout << "water_plants()" << endl;
+                dopamine += 0.15f;
+                break;
+            case 4:
+                cout << "study()" << endl;
+                energy -= 7;
+                dopamine += 0.25f;
+                break;
+        }
+        energy -= 10;
+    }
+
+    void recallHungry() {
+        if (hungry) {
+            cout << "recallHungry() " << endl;
+        }
+    }
+
+    void bath() {
+        bool hairDirty = rand() % 2;
+        if (hairDirty) {
+            cout << "wash_hair()" << endl;
+        } else {
+            cout << "take_bath()" << endl;
+        }
+        dopamine += 0.1f;
+    }
+
+    void cleanHouse() {
+        if (rand() % 2 == 0) {
+            cout << "clean_house() " << endl;
+            dopamine += 0.2f;
+        }
+    }
+
+    void rest() {
+        recallHungry();
+        bath();
+        cleanHouse();
+
+        // Simulate time check
+        int hour = rand() % 24;
+        if (hour == 0) {
+            cout << "00:00 detected" << endl;
+        } else {
+            cout << "Resting at hour: " << hour << endl;
+        }
+
+        energy = 100;
+        hungry = true;
+    }
+};
+
+int main() {
+    Life me;
+    me.exist();
+    return 0;
+}
+
+
+   
+  </main>
+
+</body>
+</html>
