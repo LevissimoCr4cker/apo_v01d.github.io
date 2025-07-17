@@ -34,7 +34,7 @@ window.addEventListener('DOMContentLoaded', () => {
   ];
 
   // Single handler for sending a message
-  function handleSend() {
+  async function handleSend() {
     const text = inputField.value.trim();
     if (!text) return;
 
@@ -58,6 +58,31 @@ window.addEventListener('DOMContentLoaded', () => {
     // Update internal thoughts box
     if (thoughtsBox) {
       thoughtsBox.textContent = internalThought;
+    }
+
+    // Save to Firestore if available
+    if (globalThis._firestoreSession) {
+      const { sessionRef } = globalThis._firestoreSession;
+      try {
+        await updateDoc(sessionRef, {
+          messages: arrayUnion({
+            sender: "user",
+            text,
+            timestamp: new Date()
+          })
+        });
+
+        await updateDoc(sessionRef, {
+          messages: arrayUnion({
+            sender: "bot",
+            text: botReply,
+            timestamp: new Date()
+          })
+        });
+
+      } catch (err) {
+        console.error("Erro ao salvar no Firestore:", err);
+      }
     }
 
     // Clear input and scroll to bottom
