@@ -79,7 +79,6 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Salva no globalThis pra acessar no main.js
   globalThis._firestoreSession = {
     db,
     sessionId: `session_${Date.now()}_${Math.floor(Math.random() * 10000)}`
