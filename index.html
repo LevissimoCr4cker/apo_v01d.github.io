@@ -52,19 +52,23 @@
     }
 
     .sidebar {
-      position: absolute;
-      top: 70px;
+      position: fixed;
+      top: 20px;
       left: 15px;
       font-size: 16px;
       font-weight: bold;
       opacity: 0.5;
+      z-index: 999;
     }
 
     .container {
-      margin: 100px auto 60px;
-      max-width: 600px;
-      padding: 0 20px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       text-align: center;
+      padding: 0 20px;
     }
 
     .section {
@@ -81,11 +85,10 @@
     <a href="#">Trader bot live</a>
     <a href="RudimentarHeatmapTheonethatwasignored">$BTC heat map</a>
     <a href="heatmap_btc">Another $BTC heat map</a>
-    <a href="btc-tracker.html">BTC Tracker App</a>
     <a href="btchugapp.html">Bitcoin hug</a>
     <a href="degenerativeai.html">Degenerative AI</a>
     <a href="degenai">V01d</a>
-    <a href="#">Stock forecaster</a>
+    <a href="https://stocklooper.web.app">Stock forecaster demo</a>
     <a href="https://t.co/aURsM0g8Nm" target="_blank">NFT portfolio</a>
     <a href="#">apo_v01d world</a>
     <a href="about.html">About</a>
@@ -94,21 +97,14 @@
   <div class="sidebar">apo_v01d</div>
 
   <div class="container">
-    <h1>apo </h1>
+    <h1>apo</h1>
     <p>Experimental macro strategy. Long volatility. Adaptive execution.</p>
-
-   
-   
   </div>
 
   <script>
     function toggleMenu() {
       const menu = document.getElementById('menu');
-      if (menu.style.display === 'flex') {
-        menu.style.display = 'none';
-      } else {
-        menu.style.display = 'flex';
-      }
+      menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
     }
   </script>
 </body>
