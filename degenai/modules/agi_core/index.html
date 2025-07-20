@@ -1,99 +1,253 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>apo_v01d :: Degen AI</title>
-    <style>
-        /* Seu CSS existente */
-        body {
-            margin: 0;
-            font-family: 'Ubuntu Mono', monospace;
-            background: #000;
-            color: #0f0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            background-image: linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        /* ... (manter o restante do CSS exatamente como está) ... */
-    </style>
+    <title>V01D Chat</title>
+    <link rel="stylesheet" href="style.css">
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>apo_v01d :: Degen AI</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Ubuntu Mono', monospace;
+      background: #000;
+      color: #0f0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      background-image: linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      background: #111;
+      color: #0ff;
+      text-shadow: 0 0 5px #0ff;
+    }
+    #logo {
+      font-weight: bold;
+      font-size: 0.9rem;
+      opacity: 0.7;
+      letter-spacing: 2px;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+    }
+    #chat-section {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+    }
+    #chatbox {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.9);
+      color: #0f0;
+      max-height: 300px;
+      white-space: pre-wrap;
+      border: 1px solid #0ff;
+      position: relative;
+    }
+    .message.user { color: #0ff; }
+    .message.ai { color: #f0f; }
+    .self-talk { color: #ff0; font-style: italic; }
+    .glow {
+      animation: pulse 1.5s ease-out;
+    }
+    @keyframes pulse {
+      0% { box-shadow: inset 0 0 10px #0ff, 0 0 20px #0ff; }
+      50% { box-shadow: inset 0 0 20px #0ff, 0 0 40px #0ff; }
+      100% { box-shadow: inset 0 0 10px #0ff, 0 0 20px #0ff; }
+    }
+    #input-area {
+      display: flex;
+      margin-top: 1rem;
+    }
+    #input-area input {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 1rem;
+      background: transparent;
+      border: 1px solid #0ff;
+      color: #0f0;
+      font-family: 'Ubuntu Mono', monospace;
+      text-shadow: 0 0 5px #0ff;
+    }
+    #input-area button {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid #0ff;
+      color: #0ff;
+      cursor: pointer;
+      font-family: 'Ubuntu Mono', monospace;
+      text-shadow: 0 0 5px #0ff;
+    }
+    #input-area button:hover {
+      background: #0ff;
+      color: #000;
+    }
+    #thoughts, #learning-updates, #pin-board {
+      padding: 1rem;
+      background: transparent;
+      color: #0ff;
+      min-height: 80px;
+      max-height: 120px;
+      overflow-y: auto;
+      text-shadow: 0 0 5px #0ff;
+    }
+    #thoughts { color: #ff0; font-style: italic; }
+    #learning-updates { color: #0f0; }
+    #pin-board { color: #f0f; }
+    #circle-visual {
+      flex: 1;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: transparent;
+    }
+    .circle-box {
+      width: 90%;
+      max-width: 300px;
+      aspect-ratio: 1 / 1;
+      border: 1px solid #0ff;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 1rem;
+      background: transparent;
+      color: #0ff;
+      text-shadow: 0 0 5px #0ff;
+    }
+    .circle-label {
+      position: absolute;
+      right: 1rem;
+      top: 0.5rem;
+      font-size: 0.75rem;
+      color: #0ff;
+      text-shadow: 0 0 3px #0ff;
+    }
+    .brain-label {
+      position: absolute;
+      right: 1rem;
+      bottom: 4.5rem;
+      font-size: 0.75rem;
+      color: #0ff;
+      text-shadow: 0 0 3px #0ff;
+    }
+    #brain-container {
+      position: absolute;
+      bottom: 2rem;
+      right: 1rem;
+      width: 150px;
+      height: 150px;
+    }
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    #return {
+      position: fixed;
+      bottom: 0.5rem;
+      right: 1rem;
+      background: transparent;
+      border: 1px solid #0ff;
+      padding: 0.3rem 0.8rem;
+      color: #0ff;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: 'Ubuntu Mono', monospace;
+      text-shadow: 0 0 5px #0ff;
+    }
+    #return:hover {
+      background: #0ff;
+      color: #000;
+    }
+    @media (max-width: 768px) {
+      main {
+        flex-direction: column;
+      }
+      #circle-visual {
+        order: -1;
+      }
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 255, 255, 0.02),
+        rgba(0, 255, 255, 0.02) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <div id="logo">apo_v01d@degen-ai:~$</div>
-    </header>
-    <main>
-        <section id="chat-section">
-            <div id="chatbox"></div>
-            <div id="input-area">
-                <input type="text" id="message" placeholder="type your command..." />
-                <button id="sendBtn">send</button>
-                <button onclick="saveTokensToFirebase()">Encerrar Sessão</button>
-            </div>
-            <div id="thoughts">
-                <strong>Thoughts:</strong>
-                <div id="inner-thoughts">(internal monologue...)</div>
-            </div>
-            <div id="learning-updates">
-                <strong>Self-Learning Updates:</strong>
-                <div id="updates">(monitoring model feedback...)</div>
-            </div>
-            <div id="pin-board">
-                <strong>Code Suggestions:</strong>
-                <div id="suggestions">(waiting for input...)</div>
-            </div>
-        </section>
-        <aside id="circle-visual">
-            <div class="circle-box">
-                Visual Thinking
-                <div class="circle-label">conscience</div>
-            </div>
-            <div class="circle-box">
-                <div id="brain-container"></div>
-                <div class="circle-label">mood</div>
-            </div>
-        </aside>
-    </main>
-    <div class="brain-label">iq / activity</div>
-    <a id="return" href="/index.html">← Main Page</a>
+  <header>
+    <div id="logo">apo_v01d@degen-ai:~$</div>
+  </header>
+  <main>
+    <section id="chat-section">
+      <div id="chatbox"></div>
+      <div id="input-area">
+        <input type="text" id="message" placeholder="type your command..." />
+        <button id="sendBtn">send</button>
+      </div>
+      <div id="thoughts">
+        <strong>Thoughts:</strong>
+        <div id="inner-thoughts">(internal monologue...)</div>
+      </div>
+      <div id="learning-updates">
+        <strong>Self-Learning Updates:</strong>
+        <div id="updates">(monitoring model feedback...)</div>
+      </div>
+      <div id="pin-board">
+        <strong>Code Suggestions:</strong>
+        <div id="suggestions">(waiting for input...)</div>
+      </div>
+    </section>
+    <aside id="circle-visual">
+      <div class="circle-box">
+        Visual Thinking
+        <div class="circle-label">conscience</div>
+      </div>
+      <div class="circle-box">
+        <div id="brain-container"></div>
+        <div class="circle-label">mood</div>
+      </div>
+    </aside>
+  </main>
+  <div class="brain-label">iq / activity</div>
+  <a id="return" href="/index.html">← Main Page</a>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+  
+  <!-- Your scripts -->
+  
+  <script type="module" src="main.js"></script>
+  <script type="module" src="selflearning.js"></script>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAB7LzrjmNv-M_VZfBBORm_WzVOOM-8RMg",
-    authDomain: "deg2-329bc.firebaseapp.com",
-    databaseURL: "https://deg2-329bc-default-rtdb.firebaseio.com",
-    projectId: "deg2-329bc",
-    storageBucket: "deg2-329bc.firebasestorage.app",
-    messagingSenderId: "581941379393",
-    appId: "1:581941379393:web:cbb90610c9a22e931d21c0",
-    measurementId: "G-6W8WZYFH8X"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  globalThis._firestoreSession = {
-    db,
-    sessionId: `session_${Date.now()}_${Math.floor(Math.random() * 10000)}`
-  };
-
-  const sessionRef = doc(db, "chat_sessions", globalThis._firestoreSession.sessionId);
-  await setDoc(sessionRef, {
-    started_at: new Date(),
-    messages: []
-  });
-
-  globalThis._firestoreSession.sessionRef = sessionRef;
-</script>
-
-    <script src="modules/agi_core/main.js"></script>
-   
+  
 </body>
 </html>
